@@ -1,7 +1,6 @@
 """Smoke tests for project setup (Requirement 1.1, 2.1, 2.3, 2.4)."""
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
