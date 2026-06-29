@@ -10,7 +10,7 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 2. Modelos de datos y migraciones | 2.1 – 2.5 | ✅ 7 entidades SQLModel + Alembic + migración inicial |
 | 3. Repositorios | 3.1 – 3.4 | ✅ WorkoutRepo, PlanRepo, TokenRepo + tests |
 | 4. Abstracción de proveedor | 4.1 – 4.5 | ✅ WorkoutProvider ABC, MockProvider, select_provider + PBT (Property 9 y 10) |
-| 5. Mapeo de entrenamientos | 5.1 – 5.2 | ⏳ Pendiente |
+| 5. Mapeo de entrenamientos | 5.1 – 5.2 | ✅ external_to_workout / workout_to_external + PBT (Property 3) |
 | 6. Sincronización y dedup | 7.1 – 7.6 | ⏳ Pendiente |
 | 7. Métricas | 8.1 – 8.6 | ⏳ Pendiente |
 | 8. Periodización y progresión | 9.1 – 9.6 | ⏳ Pendiente |
@@ -20,7 +20,7 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 12. Frontend PWA | 15.1 – 15.6 | ⏳ Pendiente |
 | 13. Despliegue | 16.1 – 16.2 | ⏳ Pendiente |
 
-Tests: **28 / 28 pasan** · Lint: limpio.
+Tests: **31 / 31 pasan** · Lint: limpio.
 
 ## Estructura del repositorio
 
@@ -44,7 +44,8 @@ compi/
 │   │       ├── base.py             # WorkoutProvider ABC + ExternalWorkout/CardioPayload/StrengthSummaryPayload
 │   │       ├── mock.py             # MockProvider (datos deterministas)
 │   │       ├── huawei.py           # Stub (se completa en task 12.2)
-│   │       └── selection.py        # select_provider_kind (Property 9)
+│   │       ├── selection.py        # select_provider_kind (Property 9)
+│   │       └── mapping.py          # external_to_workout / workout_to_external (Property 3)
 │   ├── alembic/                    # Migraciones
 │   ├── tests/                      # Pytest + Hypothesis
 │   ├── pyproject.toml
@@ -104,14 +105,16 @@ Los tests se organizan en:
 - `test_models.py` — entidades SQLModel, jerarquía, unicidad
 - `test_repositories.py` — repositorios con SQLite en memoria
 - `test_provider_properties.py` — PBT (Hypothesis) para Properties 9 y 10
+- `test_mapping_properties.py` — PBT (Hypothesis) para Property 3 (round-trip)
 
 Cobertura de las 12 propiedades de corrección del design:
 
 | Property | Validates | Test |
 |----------|-----------|------|
+| 3  | Req 3.1, 3.2, 3.3 (round-trip) | `test_mapping_properties.py` |
 | 9  | Req 1.4, 11.1 (selección proveedor) | `test_provider_properties.py` |
 | 10 | Req 5.2 (MockProvider bien formado) | `test_provider_properties.py` |
-| Resto (1–8, 11, 12) | — | Pendientes (bloques 5–11) |
+| Resto (1, 2, 4–8, 11, 12) | — | Pendientes (bloques 6–11) |
 
 ## Lint y formato
 
