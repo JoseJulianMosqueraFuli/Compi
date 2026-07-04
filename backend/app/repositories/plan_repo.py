@@ -67,6 +67,18 @@ class PlanRepository:
         )
         return self._session.exec(stmt).all()
 
+    def get_mesociclo(self, mesociclo_id: int) -> Mesociclo:
+        meso = self._session.get(Mesociclo, mesociclo_id)
+        if meso is None:
+            raise PlanNotFoundError(mesociclo_id)
+        return meso
+
+    def get_microciclo(self, microciclo_id: int) -> Microciclo:
+        micro = self._session.get(Microciclo, microciclo_id)
+        if micro is None:
+            raise PlanNotFoundError(microciclo_id)
+        return micro
+
     def list_macrociclos(self) -> Sequence[Macrociclo]:
         return self._session.exec(select(Macrociclo)).all()
 
