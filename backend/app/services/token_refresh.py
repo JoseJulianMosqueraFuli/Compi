@@ -1,5 +1,5 @@
 """Pure helper to decide if an OAuth token should be refreshed (Req 6.4, Property 11)."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 def needs_refresh(
@@ -15,7 +15,7 @@ def needs_refresh(
     if expires_at is None:
         return True
     aware_expires = expires_at if expires_at.tzinfo is not None else expires_at.replace(
-        tzinfo=timezone.utc
+        tzinfo=UTC
     )
-    aware_now = now if now.tzinfo is not None else now.replace(tzinfo=timezone.utc)
+    aware_now = now if now.tzinfo is not None else now.replace(tzinfo=UTC)
     return aware_expires <= aware_now + timedelta(seconds=margin_s)

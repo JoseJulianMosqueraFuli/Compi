@@ -1,6 +1,6 @@
 """Background sync service: fetch -> dedup -> persist (Req 6.1, 6.2, 6.3, 6.4)."""
-from datetime import datetime, timezone
-from typing import Optional
+import contextlib
+from datetime import UTC, datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -19,7 +19,7 @@ from app.services.token_refresh import needs_refresh
 
 def _last_sync_default() -> datetime:
     """Epoch used when no sync has run yet (Req 6.1 first run)."""
-    return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    return datetime(1970, 1, 1, tzinfo=UTC)
 
 
 class SyncService:
@@ -29,8 +29,8 @@ class SyncService:
         self,
         provider: WorkoutProvider,
         session: Session,
-        last_sync: Optional[datetime] = None,
-        now: Optional[datetime] = None,
+        last_sync: datetime | None = None,
+        now: datetime | None = None,
     ) -> None:
         self._provider = provider
         self._session = session
@@ -48,7 +48,7 @@ class SyncService:
             if isinstance(self._provider, HuaweiProvider):
                 token = token_repo.get_by_provider("huawei")
                 if token is not None and needs_refresh(
-                    token.expires_at, self._now or datetime.now(timezone.utc)
+                    token.expires_at, self._now or datetime.now(UTC)
                 ):
                     refreshed = self._provider.authenticate()
                     if refreshed.success:
@@ -81,7 +81,7 @@ class SyncService:
 def build_sync_service(
     settings: Settings | None = None,
     session: Session | None = None,
-    last_sync: Optional[datetime] = None,
+    last_sync: datetime | None = None,
 ) -> SyncService:
     """Factory: build the SyncService with the active provider (Req 1.4, 5.4)."""
     s = settings or get_settings()
@@ -111,8 +111,6 @@ def start_scheduler(
 
 def _scheduled_job() -> None:
     """Job entrypoint used by APScheduler."""
-    try:
+    with contextlib.suppress(Exception):
+        # Failures are retried on the next interval (design - Error Handling).
         build_sync_service().run_once()
-    except Exception:
-        # Swallow on purpose: failures are retried on the next interval (design - Error Handling).
-        pass

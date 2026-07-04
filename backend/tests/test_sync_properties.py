@@ -1,17 +1,15 @@
 """Property-based tests for dedup (Property 1) and token refresh (Property 11)."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from app.providers.base import (
     CardioPayload,
     ExternalWorkout,
-    StrengthSummaryPayload,
 )
 from app.services.dedup import partition_new_workouts
 from app.services.token_refresh import needs_refresh
-
 
 # Feature: compi-training-platform, Property 1: Deduplicación por partición de external_id
 
@@ -32,7 +30,7 @@ def external_workouts_with_ids(draw: st.DrawFn) -> list[ExternalWorkout]:
             ExternalWorkout(
                 external_id=f"ext-{i}-{draw(st.integers(min_value=0, max_value=10_000))}",
                 type="cardio",
-                start_time=start_naive.replace(tzinfo=timezone.utc),
+                start_time=start_naive.replace(tzinfo=UTC),
                 duration_s=draw(st.integers(min_value=0, max_value=7200)),
                 cardio=CardioPayload(),
             )
@@ -127,8 +125,8 @@ def test_needs_refresh_iff_expired_or_close(
     now_naive: datetime, offset_s: int, margin_s: int
 ) -> None:
     """Property 11: needs_refresh is true iff expires_at <= now + margin_s."""
-    now = now_naive.replace(tzinfo=timezone.utc)
-    expires_at = (now + timedelta(seconds=offset_s)).replace(tzinfo=timezone.utc)
+    now = now_naive.replace(tzinfo=UTC)
+    expires_at = (now + timedelta(seconds=offset_s)).replace(tzinfo=UTC)
     expected = offset_s <= margin_s
     assert needs_refresh(expires_at, now, margin_s=margin_s) is expected
 
@@ -137,7 +135,7 @@ def test_needs_refresh_iff_expired_or_close(
 @given(now_naive=datetime_strategy)
 def test_needs_refresh_none_expires_immediately(now_naive: datetime) -> None:
     """No expiry recorded -> always needs refresh."""
-    now = now_naive.replace(tzinfo=timezone.utc)
+    now = now_naive.replace(tzinfo=UTC)
     assert needs_refresh(None, now) is True
 
 
@@ -145,7 +143,7 @@ def test_needs_refresh_none_expires_immediately(now_naive: datetime) -> None:
 @given(now_naive=datetime_strategy)
 def test_needs_refresh_naive_datetime_is_treated_as_utc(now_naive: datetime) -> None:
     """A naive expires_at is interpreted as UTC."""
-    now = now_naive.replace(tzinfo=timezone.utc)
+    now = now_naive.replace(tzinfo=UTC)
     future = (now_naive + timedelta(seconds=3600))  # naive
     past = (now_naive - timedelta(seconds=3600))  # naive
     assert needs_refresh(future, now) is False
