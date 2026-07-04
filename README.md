@@ -11,7 +11,7 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 3. Repositorios | 3.1 – 3.4 | ✅ WorkoutRepo, PlanRepo, TokenRepo + tests |
 | 4. Abstracción de proveedor | 4.1 – 4.5 | ✅ WorkoutProvider ABC, MockProvider, select_provider + PBT (Property 9 y 10) |
 | 5. Mapeo de entrenamientos | 5.1 – 5.2 | ✅ external_to_workout / workout_to_external + PBT (Property 3) |
-| 6. Sincronización y dedup | 7.1 – 7.6 | ⏳ Pendiente |
+| 6. Sincronización y dedup | 7.1 – 7.6 | ✅ partition_new_workouts, needs_refresh, SyncService + APScheduler + PBT (Property 1 y 11) |
 | 7. Métricas | 8.1 – 8.6 | ⏳ Pendiente |
 | 8. Periodización y progresión | 9.1 – 9.6 | ⏳ Pendiente |
 | 9. API REST | 11.1 – 11.5 | ⏳ Pendiente |
@@ -20,7 +20,7 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 12. Frontend PWA | 15.1 – 15.6 | ⏳ Pendiente |
 | 13. Despliegue | 16.1 – 16.2 | ⏳ Pendiente |
 
-Tests: **31 / 31 pasan** · Lint: limpio.
+Tests: **41 / 41 pasan** · Lint: limpio.
 
 ## Estructura del repositorio
 
@@ -40,6 +40,10 @@ compi/
 │   │   │   ├── workout_repo.py
 │   │   │   ├── plan_repo.py
 │   │   │   └── token_repo.py
+│   │   └── services/               # Lógica de negocio (Req 6, 8, 9)
+│   │       ├── dedup.py            # partition_new_workouts (Property 1)
+│   │       ├── token_refresh.py    # needs_refresh (Property 11)
+│   │       └── sync_service.py     # SyncService + APScheduler
 │   │   └── providers/              # Abstracción de proveedor (Req 5)
 │   │       ├── base.py             # WorkoutProvider ABC + ExternalWorkout/CardioPayload/StrengthSummaryPayload
 │   │       ├── mock.py             # MockProvider (datos deterministas)
@@ -106,15 +110,19 @@ Los tests se organizan en:
 - `test_repositories.py` — repositorios con SQLite en memoria
 - `test_provider_properties.py` — PBT (Hypothesis) para Properties 9 y 10
 - `test_mapping_properties.py` — PBT (Hypothesis) para Property 3 (round-trip)
+- `test_sync_properties.py` — PBT para Properties 1 (dedup) y 11 (refresh)
+- `test_sync_integration.py` — integración SyncService + MockProvider (idempotencia, dedup, persistencia)
 
 Cobertura de las 12 propiedades de corrección del design:
 
 | Property | Validates | Test |
 |----------|-----------|------|
+| 1  | Req 6.2, 6.3 (deduplicación) | `test_sync_properties.py` |
 | 3  | Req 3.1, 3.2, 3.3 (round-trip) | `test_mapping_properties.py` |
 | 9  | Req 1.4, 11.1 (selección proveedor) | `test_provider_properties.py` |
 | 10 | Req 5.2 (MockProvider bien formado) | `test_provider_properties.py` |
-| Resto (1, 2, 4–8, 11, 12) | — | Pendientes (bloques 6–11) |
+| 11 | Req 6.4 (decisión de refresco) | `test_sync_properties.py` |
+| Resto (2, 4–8, 12) | — | Pendientes (bloques 7–11) |
 
 ## Lint y formato
 
