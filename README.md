@@ -13,14 +13,14 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 5. Mapeo de entrenamientos | 5.1 – 5.2 | ✅ external_to_workout / workout_to_external + PBT (Property 3) |
 | 6. Sincronización y dedup | 7.1 – 7.6 | ✅ partition_new_workouts, needs_refresh, SyncService + APScheduler + PBT (Property 1 y 11) |
 | 7. Métricas | 8.1 – 8.6 | ✅ compute_hr_zones, workout_volume, workout_training_load + PBT (Property 4, 5, 6) |
-| 8. Periodización y progresión | 9.1 – 9.6 | ⏳ Pendiente |
-| 9. API REST | 11.1 – 11.5 | ⏳ Pendiente |
+| 8. Periodización y progresión | 9.1 – 9.6 | ✅ PlanService con invariantes temporales, compute_progression, compare_planned_vs_actual + PBT (Property 2, 7, 8) |
+| 9. API REST | 11.1 – 11.5 + 13.1 | ✅ routers workouts/metrics/plans, main.py con lifespan, scheduler, CORS, health, PBT (Property 12) |
 | 10. Integración Huawei OAuth | 12.1 – 12.3 | ⏳ Pendiente |
 | 11. Wiring backend (main.py) | 13.1 | ⏳ Pendiente |
 | 12. Frontend PWA | 15.1 – 15.6 | ⏳ Pendiente |
 | 13. Despliegue | 16.1 – 16.2 | ⏳ Pendiente |
 
-Tests: **49 / 49 pasan** · Lint: limpio.
+Tests: **61 / 61 pasan** · Lint: limpio.
 
 ## Estructura del repositorio
 
@@ -28,8 +28,8 @@ Tests: **49 / 49 pasan** · Lint: limpio.
 compi/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py                 # Inicializacion FastAPI (pendiente)
-│   │   ├── config.py               # pydantic-settings (DATABASE_URL, HUAWEI_*, SYNC_INTERVAL_MINUTES)
+│   │   ├── main.py                 # Inicializacion FastAPI, lifespan, scheduler, CORS
+│   │   ├── config.py               # pydantic-settings (DATABASE_URL, HUAWEI_*, SYNC_INTERVAL_MINUTES, CORS)
 │   │   ├── db.py                   # engine SQLModel + get_session
 │   │   ├── models/                 # SQLModel entities
 │   │   │   ├── domain.py           # WorkoutType, HRZone, ProgressionPoint, PlannedVsActual, Split
@@ -40,11 +40,19 @@ compi/
 │   │   │   ├── workout_repo.py
 │   │   │   ├── plan_repo.py
 │   │   │   └── token_repo.py
+│   │   ├── routers/                # API REST
+│   │   │   ├── schemas.py          # Esquemas Pydantic
+│   │   │   ├── workouts.py         # /api/workouts, /metrics
+│   │   │   ├── metrics.py          # /api/metrics/volume, /load
+│   │   │   └── plans.py            # /api/plans/macrocycles, .../progression
 │   │   └── services/               # Lógica de negocio (Req 6, 8, 9)
 │   │       ├── dedup.py            # partition_new_workouts (Property 1)
 │   │       ├── token_refresh.py    # needs_refresh (Property 11)
 │   │       ├── sync_service.py     # SyncService + APScheduler
-│   │       └── metrics_service.py  # HR zones, volume, training load (Properties 4, 5, 6)
+│   │       ├── metrics_service.py  # HR zones, volume, training load (Properties 4, 5, 6)
+│   │       ├── plan_service.py     # PlanService con invariantes temporales (Property 2)
+│   │       ├── progression_service.py  # compute_progression con deload 50% (Property 7)
+│   │       └── compare_service.py  # compare_planned_vs_actual (Property 8)
 │   │   └── providers/              # Abstracción de proveedor (Req 5)
 │   │       ├── base.py             # WorkoutProvider ABC + ExternalWorkout/CardioPayload/StrengthSummaryPayload
 │   │       ├── mock.py             # MockProvider (datos deterministas)
@@ -84,9 +92,22 @@ docker compose up -d db
 # Aplicar migraciones
 alembic upgrade head
 
-# Arrancar API (pendiente: app.main)
-# uvicorn app.main:app --reload
+# Arrancar API
+uvicorn app.main:app --reload
 ```
+
+Endpoints principales:
+
+- `GET /health` — health check
+- `GET /api/workouts` — lista workouts
+- `GET /api/workouts/{id}` — detalle (404 si no existe)
+- `POST /api/workouts/{id}/strength-detail` — registro manual (Req 3.5)
+- `GET /api/workouts/{id}/metrics` — zonas FC
+- `GET /api/metrics/volume` — volumen agregado
+- `GET /api/metrics/load` — carga de entrenamiento agregada
+- `GET /api/plans/macrocycles` — lista macrociclos
+- `POST /api/plans/macrocycles|mesocycles|microcycles|sessions` — crear nodos
+- `GET /api/plans/{id}/progression` — carga objetivo por microciclo
 
 Variables de entorno (ver `backend/.env.example`):
 
@@ -114,20 +135,25 @@ Los tests se organizan en:
 - `test_sync_properties.py` — PBT para Properties 1 (dedup) y 11 (refresh)
 - `test_sync_integration.py` — integración SyncService + MockProvider (idempotencia, dedup, persistencia)
 - `test_metrics_properties.py` — PBT para Properties 4 (zonas FC), 5 (volumen) y 6 (carga)
+- `test_periodization_properties.py` — PBT para Properties 2 (jerarquía), 7 (progresión) y 8 (comparación)
+- `test_api.py` — routers con TestClient; PBT Property 12 (404) + smoke tests de plans y metrics
 
 Cobertura de las 12 propiedades de corrección del design:
 
 | Property | Validates | Test |
 |----------|-----------|------|
 | 1  | Req 6.2, 6.3 (deduplicación) | `test_sync_properties.py` |
+| 2  | Req 4.1, 4.3 (jerarquía periodización) | `test_periodization_properties.py` |
 | 3  | Req 3.1, 3.2, 3.3 (round-trip) | `test_mapping_properties.py` |
 | 4  | Req 8.1 (zonas FC bien formadas) | `test_metrics_properties.py` |
 | 5  | Req 8.2 (volumen no negativo y aditivo) | `test_metrics_properties.py` |
 | 6  | Req 8.3 (carga no negativa y monótona) | `test_metrics_properties.py` |
+| 7  | Req 9.1, 9.2 (progresión con deload) | `test_periodization_properties.py` |
+| 8  | Req 9.3 (planificado vs real) | `test_periodization_properties.py` |
 | 9  | Req 1.4, 11.1 (selección proveedor) | `test_provider_properties.py` |
 | 10 | Req 5.2 (MockProvider bien formado) | `test_provider_properties.py` |
 | 11 | Req 6.4 (decisión de refresco) | `test_sync_properties.py` |
-| Resto (2, 7, 8, 12) | — | Pendientes (bloques 8–11) |
+| 12 | Req 7.4 (recurso inexistente -> 404) | `test_api.py` |
 
 ## Lint y formato
 
