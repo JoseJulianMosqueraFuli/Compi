@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.config import get_settings
 from app.models.auth import DEFAULT_HR_MAX_BPM, USER_PROFILE_SINGLETON_ID, UserProfile
-from app.routers import metrics, plans, workouts
+from app.routers import auth, metrics, plans, workouts
 from app.services.sync_service import start_scheduler
 
 _scheduler: BackgroundScheduler | None = None
@@ -61,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(workouts.router)
     app.include_router(metrics.router)
     app.include_router(plans.router)
+    app.include_router(auth.router)
 
     @app.exception_handler(IntegrityError)
     async def _on_integrity_error(request: Request, exc: IntegrityError) -> JSONResponse:

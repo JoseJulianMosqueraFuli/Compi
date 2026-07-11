@@ -15,12 +15,12 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 7. Métricas | 8.1 – 8.6 | ✅ compute_hr_zones, workout_volume, workout_training_load + PBT (Property 4, 5, 6) |
 | 8. Periodización y progresión | 9.1 – 9.6 | ✅ PlanService con invariantes temporales, compute_progression, compare_planned_vs_actual + PBT (Property 2, 7, 8) |
 | 9. API REST | 11.1 – 11.5 + 13.1 | ✅ routers workouts/metrics/plans, main.py con lifespan, scheduler, CORS, health, PBT (Property 12) |
-| 10. Integración Huawei OAuth | 12.1 – 12.3 | ⏳ Pendiente |
+| 10. Integración Huawei OAuth | 12.1 – 12.3 | ✅ HuaweiProvider real con OAuth, refresh y mapeo de respuesta; router auth con /login y /callback |
 | 11. Wiring backend (main.py) | 13.1 | ⏳ Pendiente |
 | 12. Frontend PWA | 15.1 – 15.6 | ⏳ Pendiente |
 | 13. Despliegue | 16.1 – 16.2 | ⏳ Pendiente |
 
-Tests: **61 / 61 pasan** · Lint: limpio.
+Tests: **73 / 73 pasan** · Lint: limpio.
 
 ## Estructura del repositorio
 
@@ -44,7 +44,8 @@ compi/
 │   │   │   ├── schemas.py          # Esquemas Pydantic
 │   │   │   ├── workouts.py         # /api/workouts, /metrics
 │   │   │   ├── metrics.py          # /api/metrics/volume, /load
-│   │   │   └── plans.py            # /api/plans/macrocycles, .../progression
+│   │   │   ├── plans.py            # /api/plans/macrocycles, .../progression
+│   │   │   └── auth.py             # /api/auth/huawei/login, /callback
 │   │   └── services/               # Lógica de negocio (Req 6, 8, 9)
 │   │       ├── dedup.py            # partition_new_workouts (Property 1)
 │   │       ├── token_refresh.py    # needs_refresh (Property 11)
@@ -56,7 +57,7 @@ compi/
 │   │   └── providers/              # Abstracción de proveedor (Req 5)
 │   │       ├── base.py             # WorkoutProvider ABC + ExternalWorkout/CardioPayload/StrengthSummaryPayload
 │   │       ├── mock.py             # MockProvider (datos deterministas)
-│   │       ├── huawei.py           # Stub (se completa en task 12.2)
+│   │       ├── huawei.py           # HuaweiProvider real (OAuth + refresh)
 │   │       ├── selection.py        # select_provider_kind (Property 9)
 │   │       └── mapping.py          # external_to_workout / workout_to_external (Property 3)
 │   ├── alembic/                    # Migraciones
@@ -108,6 +109,8 @@ Endpoints principales:
 - `GET /api/plans/macrocycles` — lista macrociclos
 - `POST /api/plans/macrocycles|mesocycles|microcycles|sessions` — crear nodos
 - `GET /api/plans/{id}/progression` — carga objetivo por microciclo
+- `GET /api/auth/huawei/login` — inicia el flujo OAuth (redirige a Huawei)
+- `GET /api/auth/huawei/callback` — intercambia el code por tokens y persiste el refresh token
 
 Variables de entorno (ver `backend/.env.example`):
 
