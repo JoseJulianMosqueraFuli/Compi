@@ -175,12 +175,22 @@ ruff check app/ tests/ --fix
 
 ## Frontend - Desarrollo local
 
+El frontend usa **pnpm** como gestor de dependencias (lockfile versionado `pnpm-lock.yaml`, scripts de postinstall deshabilitados por defecto).
+
 ```bash
 cd frontend
-npm install
+corepack enable              # si pnpm no está instalado
+pnpm install
 cp .env.example .env.local   # ajustar NEXT_PUBLIC_API_URL
-npm run dev                  # http://localhost:3000
+pnpm dev                     # http://localhost:3000
 ```
+
+Scripts disponibles (`pnpm <script>`): `dev`, `build`, `start`, `lint`, `typecheck`.
+
+**Política de seguridad de pnpm:**
+- `engine-strict=true` en `.npmrc`: rechaza instalaciones si no coincide con la `packageManager` declarada en `package.json`.
+- `ignore-scripts=true` por defecto: los `postinstall` de dependencias no se ejecutan.
+- Lista explícita de builds nativos permitidos en `package.json#pnpm.onlyBuiltDependencies` (solo `sharp` y `unrs-resolver`, requeridos por Next.js). Para añadir otro, edita la lista a propósito y ejecuta `pnpm approve-builds <pkg>`.
 
 Vistas implementadas:
 
