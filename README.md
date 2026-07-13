@@ -16,11 +16,11 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 8. Periodización y progresión | 9.1 – 9.6 | ✅ PlanService con invariantes temporales, compute_progression, compare_planned_vs_actual + PBT (Property 2, 7, 8) |
 | 9. API REST | 11.1 – 11.5 + 13.1 | ✅ routers workouts/metrics/plans, main.py con lifespan, scheduler, CORS, health, PBT (Property 12) |
 | 10. Integración Huawei OAuth | 12.1 – 12.3 | ✅ HuaweiProvider real con OAuth, refresh y mapeo de respuesta; router auth con /login y /callback |
-| 11. Wiring backend (main.py) | 13.1 | ⏳ Pendiente |
-| 12. Frontend PWA | 15.1 – 15.6 | ⏳ Pendiente |
-| 13. Despliegue | 16.1 – 16.2 | ⏳ Pendiente |
+| 11. Wiring backend (main.py) | 13.1 | ✅ App FastAPI con lifespan, scheduler, CORS, health, handlers 404/409 |
+| 12. Frontend PWA | 15.1 – 15.5 | ✅ Next.js 15 + App Router, PWA instalable, dashboard, vista cardio/fuerza/plan, cliente API tipado |
+| 13. Despliegue | 16.1 – 16.2 | ✅ Dockerfile del backend, build estático del frontend (Next.js) |
 
-Tests: **73 / 73 pasan** · Lint: limpio.
+Tests backend: **73 / 73 pasan** · Lint backend: limpio · Frontend: typecheck + lint + build OK.
 
 ## Estructura del repositorio
 
@@ -63,11 +63,18 @@ compi/
 │   ├── alembic/                    # Migraciones
 │   ├── tests/                      # Pytest + Hypothesis
 │   ├── pyproject.toml
-│   ├── alembic.ini
-│   ├── .env.example
-│   └── Dockerfile                  # Pendiente
-├── frontend/                       # Next.js PWA (pendiente)
-├── docs/                           # Documentación
+ │   ├── alembic.ini
+ │   ├── .env.example
+ │   └── Dockerfile
+ ├── frontend/                       # Next.js 15 PWA
+ │   ├── src/
+ │   │   ├── app/                    # App Router: /, /workouts/[id], /plan
+ │   │   ├── components/             # Nav
+ │   │   └── lib/                    # api.ts (cliente tipado) + types.ts
+ │   ├── public/                     # manifest, icons, sw.js
+ │   ├── .env.example
+ │   └── package.json
+ ├── docs/                           # Documentación
 ├── docker-compose.yml              # PostgreSQL 16
 ├── .gitignore
 └── README.md
@@ -77,7 +84,7 @@ compi/
 
 - Python 3.11+ (probado con 3.12)
 - Docker y Docker Compose (para PostgreSQL en desarrollo)
-- Node.js 20+ (para el frontend, cuando se implemente)
+- Node.js 20+ (para el frontend)
 
 ## Backend - Desarrollo local
 
@@ -171,10 +178,17 @@ ruff check app/ tests/ --fix
 ```bash
 cd frontend
 npm install
-npm run dev
+cp .env.example .env.local   # ajustar NEXT_PUBLIC_API_URL
+npm run dev                  # http://localhost:3000
 ```
 
-(Placeholder — el frontend se implementa en los bloques 12 y siguientes.)
+Vistas implementadas:
+
+- `/` — Dashboard con métricas agregadas y últimos workouts
+- `/workouts/[id]` — Detalle cardio (zonas FC, pace) o fuerza (volumen + formulario manual de `StrengthDetail`)
+- `/plan` — Lista de macrociclos y progresión objetivo por microciclo
+
+PWA: `manifest.json` + iconos SVG + service worker en `public/sw.js` (cache-first para estáticos, network-first para navegaciones, registro client-side en `layout.tsx`).
 
 ## Documentación
 
