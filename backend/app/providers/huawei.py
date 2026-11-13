@@ -1,6 +1,6 @@
 """HuaweiProvider: real WorkoutProvider implementation against Huawei Health Kit (Req 5.3, 6.4)."""
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -108,9 +108,7 @@ class HuaweiProvider(WorkoutProvider):
         self._refresh_token = payload.get("refresh_token") or self._refresh_token
         expires_in = payload.get("expires_in")
         if expires_in is not None:
-            self._expires_at = self._clock().fromtimestamp(
-                self._clock().timestamp() + int(expires_in)
-            )
+            self._expires_at = self._clock() + timedelta(seconds=int(expires_in))
         return AuthResult(
             success=True,
             access_token=self._access_token,

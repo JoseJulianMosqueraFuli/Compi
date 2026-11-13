@@ -250,3 +250,6 @@ pgdata/
 backend/alembic/versions/__pycache__/
 
 .Kiro/
+
+# The Python template above ignores every lib/ directory; the frontend API client lives in one.
+!frontend/src/lib/
