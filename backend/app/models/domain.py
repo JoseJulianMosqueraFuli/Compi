@@ -14,6 +14,28 @@ class WorkoutType(str, Enum):
     STRENGTH = "strength"
 
 
+class SessionKind(str, Enum):
+    """What a recommended session asks for. Walking and running are told apart here
+    because WorkoutType only knows cardio."""
+
+    STRENGTH = "strength"
+    RUN = "run"
+    WALK = "walk"
+
+    @property
+    def workout_type(self) -> WorkoutType:
+        return WorkoutType.STRENGTH if self is SessionKind.STRENGTH else WorkoutType.CARDIO
+
+
+class SessionStatus(str, Enum):
+    """Outcome of a recommended session."""
+
+    PENDING = "pending"
+    DONE = "done"
+    PARTIAL = "partial"
+    SKIPPED = "skipped"
+
+
 class Split(BaseModel):
     """One split of a cardio workout (e.g. per km)."""
 
