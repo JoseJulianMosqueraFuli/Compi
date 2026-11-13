@@ -4,18 +4,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.domain import WorkoutType
-
-
-class StrengthDetailIn(BaseModel):
-    exercise: str = Field(min_length=1)
-    sets: int = Field(ge=1)
-    reps: int = Field(ge=1)
-    weight_kg: float = Field(ge=0)
-
-
-class StrengthDetailOut(StrengthDetailIn):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
+from app.routers.training_schemas import ExerciseOut
 
 
 class CardioDetailOut(BaseModel):
@@ -23,6 +12,7 @@ class CardioDetailOut(BaseModel):
     id: int
     gps_polyline: str | None = None
     avg_pace_s_per_km: float | None = None
+    distance_m: float | None = None
 
 
 class WorkoutOut(BaseModel):
@@ -31,16 +21,19 @@ class WorkoutOut(BaseModel):
     id: int
     external_id: str
     type: WorkoutType
+    subtype: str | None = None
     start_time: datetime
     duration_s: int
     avg_hr: int | None = None
     max_hr: int | None = None
     calories: float | None = None
+    perceived_effort: int | None = None
+    notes: str | None = None
     strength_total_volume_kg: float | None = None
     strength_total_sets: int | None = None
     strength_exercises_count: int | None = None
     cardio_detail: CardioDetailOut | None = None
-    strength_detail: StrengthDetailOut | None = None
+    exercises: list[ExerciseOut] = Field(default_factory=list)
 
 
 class MetricsOut(BaseModel):

@@ -95,7 +95,7 @@ def local_now(prefs: TrainingPreferences, now: datetime) -> datetime:
 
 
 def _to_time(minutes: int) -> time:
-    return time(hour=min(minutes // 60, 23), minute=minutes % 60 if minutes < 1440 else 59)
+    return time(hour=minutes // 60, minute=minutes % 60)
 
 
 def _to_minutes(t: time) -> int:
@@ -391,6 +391,7 @@ def _carry_over(
     sources: list[tuple[RecommendedSession, list[ExercisePrescription]]],
     targets: dict[int, tuple[RecommendedSession, Placement, Prescription, list[str]]],
     factor: float,
+    cuts: dict[int, list[str]],
 ) -> None:
     """Move exercises that were cut from a shortened session into another pending strength
     session of the week that still has spare time in its window."""
@@ -423,15 +424,22 @@ def _carry_over(
                 reasons.append(
                     f"Se añade {exercise.name}, que no cabía el {fmt_day(source.day)}."
                 )
-                source.reasons = [
-                    *source.reasons,
-                    f"{exercise.name} pasa a {target.title} ({fmt_day(placement.day)}).",
-                ]
+                note = f"{exercise.name} pasa a {target.title} ({fmt_day(placement.day)})."
+                source.reasons = [*source.reasons, note]
+                cuts.setdefault(source.id, []).append(note)  # type: ignore[arg-type]
+                cuts.setdefault(target.id, []).append(  # type: ignore[arg-type]
+                    f"Se añade {exercise.name}, que no cabía el {fmt_day(source.day)}."
+                )
                 break
 
 
 def _describe_change(
-    s: RecommendedSession, before: _Snapshot, after: _Snapshot, today: date, why: str
+    s: RecommendedSession,
+    before: _Snapshot,
+    after: _Snapshot,
+    today: date,
+    why: str,
+    cut_notes: Sequence[str],
 ) -> tuple[str, str, str] | None:
     """(kind, summary, reason) of what changed for a session, or None if nothing did."""
     if before == after:
@@ -441,7 +449,7 @@ def _describe_change(
         if after.day and after.start_time
         else ""
     )
-    detail = " ".join(r for r in s.reasons[1:] if r)
+    detail = " ".join(cut_notes)
     if after.day is None:
         return ("unscheduled", f"{s.title} ya no cabe esta semana.", s.reasons[0])
     if before.day is None:
@@ -506,6 +514,7 @@ def _replan(
 
     staged: dict[int, tuple[RecommendedSession, Placement, Prescription, list[str]]] = {}
     cut: list[tuple[RecommendedSession, list[ExercisePrescription]]] = []
+    cuts: dict[int, list[str]] = {}
     for s in pending:
         base = Prescription.model_validate(s.base_prescription)
         placement = schedule.placements.get(s.id)
@@ -525,6 +534,7 @@ def _replan(
             reasons.append(base.reason)
         reasons.extend(base.notes)
         if fitted.notes:
+            cuts[s.id] = list(fitted.notes)  # type: ignore[index]
             reasons.append(
                 f"La versión completa pide {s.full_minutes} min y la ventana tiene "
                 f"{placement.slot.minutes}: " + " ".join(fitted.notes)
@@ -539,7 +549,7 @@ def _replan(
             s.prescription = prescription.model_dump(mode="json")
             s.planned_minutes = estimated_minutes(prescription, factor)
 
-    _carry_over(cut, staged, factor)
+    _carry_over(cut, staged, factor, cuts)
     for s, _placement, prescription, extra in staged.values():
         s.prescription = prescription.model_dump(mode="json")
         s.planned_minutes = estimated_minutes(prescription, factor)
@@ -553,7 +563,12 @@ def _replan(
         if trigger is None:
             continue
         described = _describe_change(
-            s, before[s.id], _Snapshot.of(s), now_local.date(), TRIGGER_REASONS[trigger]
+            s,
+            before[s.id],
+            _Snapshot.of(s),
+            now_local.date(),
+            TRIGGER_REASONS[trigger],
+            cuts.get(s.id, ()),  # type: ignore[arg-type]
         )
         if described is None:
             continue
@@ -741,7 +756,13 @@ def log_session(
     rec.workout_id = workout.id
     session.add(rec)
     if rec.kind is SessionKind.STRENGTH:
-        replace_exercises(session, workout, exercises)
+        if exercises:
+            replace_exercises(session, workout, exercises)
+        elif workout.exercises:
+            # Linking a workout whose sets were already logged: keep them.
+            refresh_linked_status(session, workout)
+        else:
+            raise WorkoutMismatchError("a strength session needs at least one exercise logged")
     else:
         if distance_km is not None:
             detail = workout.cardio_detail or CardioDetail(workout_id=workout.id)  # type: ignore[arg-type]

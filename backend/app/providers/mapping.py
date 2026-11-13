@@ -14,8 +14,8 @@ def external_to_workout(ext: ExternalWorkout) -> Workout:
     """Map an external workout to a (non-persisted) Workout (Req 5.1).
 
     The cardio/strength specific payloads are not stored on the Workout itself;
-    they are persisted via the dedicated CardioDetail/StrengthDetail tables by
-    the sync service. `created_at` is left to the database default.
+    they are persisted via the dedicated CardioDetail table by the sync service;
+    the per-set strength log is entered by the user. `created_at` is left to the database default.
     """
     return Workout(
         external_id=ext.external_id,

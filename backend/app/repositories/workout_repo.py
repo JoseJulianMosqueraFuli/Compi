@@ -1,11 +1,11 @@
-"""Data-access layer for Workout, CardioDetail and StrengthDetail (Req 6.2, 6.3, 7.1, 7.4)."""
+"""Data-access layer for Workout and CardioDetail (Req 6.2, 6.3, 7.1, 7.4)."""
 from collections.abc import Sequence
 from datetime import date, datetime
 
 from sqlmodel import Session, select
 
 from app.models.domain import WorkoutType
-from app.models.workout import CardioDetail, StrengthDetail, Workout
+from app.models.workout import CardioDetail, Workout
 
 
 class WorkoutNotFoundError(LookupError):
@@ -30,12 +30,6 @@ class WorkoutRepository:
         return workout
 
     def attach_cardio_detail(self, workout_id: int, detail: CardioDetail) -> CardioDetail:
-        detail.workout_id = workout_id
-        self._session.add(detail)
-        self._session.flush()
-        return detail
-
-    def attach_strength_detail(self, workout_id: int, detail: StrengthDetail) -> StrengthDetail:
         detail.workout_id = workout_id
         self._session.add(detail)
         self._session.flush()

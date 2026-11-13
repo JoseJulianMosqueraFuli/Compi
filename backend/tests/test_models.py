@@ -11,14 +11,15 @@ from app.models import (
     DEFAULT_HR_MAX_BPM,
     USER_PROFILE_SINGLETON_ID,
     CardioDetail,
+    ExerciseSet,
     Macrociclo,
     Mesociclo,
     Microciclo,
     OAuthToken,
     SesionPlanificada,
-    StrengthDetail,
     UserProfile,
     Workout,
+    WorkoutExercise,
     WorkoutType,
     recompute_strength_summary,
 )
@@ -55,11 +56,17 @@ def test_workout_recompute_strength_summary() -> None:
         start_time=datetime.now(UTC),
         duration_s=1800,
     )
-    d = StrengthDetail(exercise="Squat", sets=5, reps=5, weight_kg=100.0)
-    recompute_strength_summary(w, d)
-    assert w.strength_total_sets == 5
-    assert w.strength_total_volume_kg == 2500.0
-    assert w.strength_exercises_count == 1
+    squat = WorkoutExercise(order_index=1, name="Squat")
+    squat.sets = [ExerciseSet(order_index=i, reps=5, weight_kg=100.0) for i in range(1, 6)]
+    curl = WorkoutExercise(order_index=2, name="Curl")
+    curl.sets = [
+        ExerciseSet(order_index=1, reps=12, weight_kg=10.0),
+        ExerciseSet(order_index=2, reps=10, weight_kg=12.5),
+    ]
+    recompute_strength_summary(w, [squat, curl])
+    assert w.strength_total_sets == 7
+    assert w.strength_total_volume_kg == 2500.0 + 120.0 + 125.0
+    assert w.strength_exercises_count == 2
 
 
 def test_recompute_strength_summary_rejects_cardio() -> None:
@@ -69,9 +76,8 @@ def test_recompute_strength_summary_rejects_cardio() -> None:
         start_time=datetime.now(UTC),
         duration_s=1800,
     )
-    d = StrengthDetail(exercise="X", sets=1, reps=1, weight_kg=1.0)
     with pytest.raises(ValueError):
-        recompute_strength_summary(w, d)
+        recompute_strength_summary(w, [])
 
 
 def test_periodization_hierarchy(engine) -> None:

@@ -6,16 +6,12 @@ from sqlmodel import Session
 
 from app.db import get_session
 from app.models.auth import UserProfile
-from app.models.workout import StrengthDetail, recompute_strength_summary
+from app.models.domain import WorkoutType
 from app.repositories.workout_repo import WorkoutRepository
-from app.routers.schemas import (
-    HRZoneOut,
-    HRZonesOut,
-    StrengthDetailIn,
-    StrengthDetailOut,
-    WorkoutOut,
-)
+from app.routers.schemas import HRZoneOut, HRZonesOut, WorkoutOut
+from app.routers.training_schemas import ExerciseIn
 from app.services.metrics_service import compute_hr_zones
+from app.services.week_service import LoggedExercise, LoggedSet, replace_exercises
 
 router = APIRouter(prefix="/api/workouts", tags=["workouts"])
 
@@ -46,31 +42,38 @@ def get_workout(workout_id: int, session: SessionDep) -> WorkoutOut:
     return WorkoutOut.model_validate(workout)
 
 
-@router.post(
-    "/{workout_id}/strength-detail",
-    response_model=StrengthDetailOut,
-    status_code=status.HTTP_201_CREATED,
-)
-def attach_strength_detail(
-    workout_id: int, payload: StrengthDetailIn, session: SessionDep
-) -> StrengthDetailOut:
+@router.put("/{workout_id}/exercises", response_model=WorkoutOut)
+def replace_workout_exercises(
+    workout_id: int, payload: list[ExerciseIn], session: SessionDep
+) -> WorkoutOut:
+    """Record the strength log of a workout set by set, replacing any previous log (Req 3.5).
+
+    If the workout is recorded against a recommended session, its done/partial status
+    is re-derived from the new log.
+    """
     repo = WorkoutRepository(session)
     try:
         workout = repo.get(workout_id)
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workout not found") from exc
-    detail = StrengthDetail(
-        workout_id=workout.id,  # type: ignore[arg-type]
-        exercise=payload.exercise,
-        sets=payload.sets,
-        reps=payload.reps,
-        weight_kg=payload.weight_kg,
+    if workout.type is not WorkoutType.STRENGTH:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="only strength workouts hold exercises"
+        )
+    replace_exercises(
+        session,
+        workout,
+        [
+            LoggedExercise(
+                exercise_key=e.exercise_key,
+                name=e.name,
+                sets=[LoggedSet(s.reps, s.weight_kg, s.rest_s, s.rpe) for s in e.sets],
+            )
+            for e in payload
+        ],
     )
-    recompute_strength_summary(workout, detail)
-    session.add(workout)
-    repo.attach_strength_detail(workout.id, detail)  # type: ignore[arg-type]
     session.commit()
-    return StrengthDetailOut.model_validate(detail)
+    return WorkoutOut.model_validate(workout)
 
 
 @router.get("/{workout_id}/metrics", response_model=HRZonesOut)

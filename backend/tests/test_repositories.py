@@ -15,8 +15,9 @@ from app.models.periodization import (
 )
 from app.models.workout import (
     CardioDetail,
-    StrengthDetail,
+    ExerciseSet,
     Workout,
+    WorkoutExercise,
     recompute_strength_summary,
 )
 from app.repositories.plan_repo import PlanNotFoundError, PlanRepository
@@ -60,17 +61,25 @@ def test_workout_repository_get_raises_not_found(session: Session) -> None:
         repo.get(999)
 
 
-def test_workout_repository_attach_strength_detail(session: Session) -> None:
+def test_workout_keeps_each_set_separately(session: Session) -> None:
     repo = WorkoutRepository(session)
     w = repo.insert(_make_workout("s-1", WorkoutType.STRENGTH))
-    detail = StrengthDetail(exercise="Squat", sets=5, reps=5, weight_kg=100.0)
-    recompute_strength_summary(w, detail)
-    repo.attach_strength_detail(w.id, detail)  # type: ignore[arg-type]
+    squat = WorkoutExercise(order_index=1, exercise_key="squat", name="Squat")
+    squat.sets = [
+        ExerciseSet(order_index=1, reps=5, weight_kg=100.0, rest_s=150),
+        ExerciseSet(order_index=2, reps=4, weight_kg=105.0, rest_s=210, rpe=9.0),
+    ]
+    w.exercises = [squat]
+    recompute_strength_summary(w, w.exercises)
     session.commit()
 
     reloaded = repo.get(w.id)  # type: ignore[arg-type]
-    assert reloaded.strength_detail is not None
-    assert reloaded.strength_total_volume_kg == 2500.0
+    sets = reloaded.exercises[0].sets
+    assert [(s.reps, s.weight_kg, s.rest_s, s.rpe) for s in sets] == [
+        (5, 100.0, 150, None),
+        (4, 105.0, 210, 9.0),
+    ]
+    assert reloaded.strength_total_volume_kg == 920.0
 
 
 def test_workout_repository_attach_cardio_detail(session: Session) -> None:
