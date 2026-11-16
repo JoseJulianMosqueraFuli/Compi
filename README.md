@@ -23,11 +23,9 @@ Plataforma personal de entrenamiento que sincroniza entrenamientos desde Huawei 
 | 15. Recomendador semanal (backend) | 18.2 – 18.4 | ✅ Disponibilidad, preferencias, semana recomendada, recálculo, registro y evaluación |
 | 16. Migración del recomendador | 18.5 | ✅ `bf03fa6b4c07`: tablas nuevas, datos de `strength_detail` migrados, timestamps a `timestamptz` |
 | 17. Tests del recomendador | 18.6 | ✅ Funciones puras (unitarias + PBT) y API de punta a punta |
-| 18. Frontend del recomendador | 18.7 | ⏳ Pendiente: vistas de disponibilidad, preferencias y semana; adaptar el formulario de fuerza |
+| 18. Frontend del recomendador | 18.7 – 18.8 | 🟡 Cliente API y formulario de fuerza por serie listos; faltan las vistas de disponibilidad, preferencias y semana |
 
-Tests backend: **139 / 139 pasan** · Lint backend: limpio.
-
-> ⚠️ El formulario de fuerza de `/workouts/[id]` todavía llama a `POST /api/workouts/{id}/strength-detail`, que ya no existe. Se corrige en la tarea 18.7.
+Tests backend: **139 / 139 pasan** · Lint backend: limpio · Frontend: typecheck + lint + build OK.
 
 ## Estructura del repositorio
 
@@ -235,7 +233,7 @@ Scripts disponibles (`pnpm <script>`): `dev`, `build`, `start`, `lint`, `typeche
 Vistas implementadas:
 
 - `/` — Dashboard con métricas agregadas y últimos workouts
-- `/workouts/[id]` — Detalle cardio (zonas FC, pace) o fuerza (volumen + formulario manual; pendiente de adaptar al registro por serie)
+- `/workouts/[id]` — Detalle cardio (zonas FC, pace) o fuerza (resumen + registro serie a serie: ejercicios del catálogo o libres, editable)
 - `/plan` — Lista de macrociclos y progresión objetivo por microciclo
 
 PWA: `manifest.json` + iconos SVG + service worker en `public/sw.js` (cache-first para estáticos, network-first para navegaciones, registro client-side en `layout.tsx`).

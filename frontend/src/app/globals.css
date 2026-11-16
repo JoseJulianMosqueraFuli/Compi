@@ -88,3 +88,6 @@ label { display: block; font-size: 0.85rem; color: var(--fg-muted); margin: 0.5r
 
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--bg-elevated); }
+
+button.secondary { background: var(--bg-elevated); color: var(--fg); font-weight: 500; }
+.row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }

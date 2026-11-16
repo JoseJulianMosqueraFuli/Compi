@@ -269,10 +269,12 @@ Plan de implementación incremental para el MVP de Compi. El backend se construy
     - Verificada con upgrade, downgrade y re-upgrade en SQLite y en Postgres; `alembic check` sin diferencias
   - [x]\* 18.6 Escribir pruebas del recomendador
     - `test_recommender.py` (unitarias + PBT) y `test_recommendations_api.py` (API de punta a punta)
-  - [ ] 18.7 Implementar las vistas del recomendador en el frontend
+  - [x] 18.7 Restaurar el cliente API del frontend y adaptar el registro de fuerza
+    - `src/lib/api.ts` y `src/lib/types.ts` nunca se versionaron (el `lib/` del `.gitignore` de Python los ignoraba); reescritos según los esquemas actuales del backend
+    - `/workouts/[id]` registra serie a serie con `PUT /api/workouts/{id}/exercises` (catálogo o nombre libre, editable)
+  - [ ] 18.8 Implementar las vistas del recomendador en el frontend
     - Disponibilidad y excepciones, preferencias, semana recomendada con registro/salto/reapertura
-    - Adaptar el formulario de fuerza de `/workouts/[id]` a `PUT /api/workouts/{id}/exercises` (hoy llama al endpoint eliminado `strength-detail`)
-  - [ ] 18.8 Documentar requisitos y diseño del recomendador en `requirements.md` y `design.md`
+  - [ ] 18.9 Documentar requisitos y diseño del recomendador en `requirements.md` y `design.md`
 
 ## Notes
 
