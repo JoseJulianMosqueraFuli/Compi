@@ -1,6 +1,6 @@
 # Compi - Training Platform
 
-Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde Huawei Health Kit, los persiste, calcula métricas y permite planificar mediante periodización.
+Plataforma personal de entrenamiento que sincroniza entrenamientos desde Huawei Health Kit, los persiste, calcula métricas, permite planificar mediante periodización y recomienda cada semana qué entrenar y cuándo según tu disponibilidad.
 
 ## Estado del desarrollo
 
@@ -19,8 +19,15 @@ Plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde H
 | 11. Wiring backend (main.py) | 13.1 | ✅ App FastAPI con lifespan, scheduler, CORS, health, handlers 404/409 |
 | 12. Frontend PWA | 15.1 – 15.5 | ✅ Next.js 15 + App Router, PWA instalable, dashboard, vista cardio/fuerza/plan, cliente API tipado |
 | 13. Despliegue | 16.1 – 16.2 | ✅ Dockerfile del backend, build estático del frontend (Next.js) |
+| 14. Registro de fuerza por serie | 18.1 | ✅ `WorkoutExercise` + `ExerciseSet` reemplazan a `StrengthDetail`; `PUT /api/workouts/{id}/exercises` |
+| 15. Recomendador semanal (backend) | 18.2 – 18.4 | ✅ Disponibilidad, preferencias, semana recomendada, recálculo, registro y evaluación |
+| 16. Migración del recomendador | 18.5 | ✅ `bf03fa6b4c07`: tablas nuevas, datos de `strength_detail` migrados, timestamps a `timestamptz` |
+| 17. Tests del recomendador | 18.6 | ✅ Funciones puras (unitarias + PBT) y API de punta a punta |
+| 18. Frontend del recomendador | 18.7 | ⏳ Pendiente: vistas de disponibilidad, preferencias y semana; adaptar el formulario de fuerza |
 
-Tests backend: **73 / 73 pasan** · Lint backend: limpio · Frontend: typecheck + lint + build OK.
+Tests backend: **139 / 139 pasan** · Lint backend: limpio.
+
+> ⚠️ El formulario de fuerza de `/workouts/[id]` todavía llama a `POST /api/workouts/{id}/strength-detail`, que ya no existe. Se corrige en la tarea 18.7.
 
 ## Estructura del repositorio
 
@@ -31,10 +38,12 @@ compi/
 │   │   ├── main.py                 # Inicializacion FastAPI, lifespan, scheduler, CORS
 │   │   ├── config.py               # pydantic-settings (DATABASE_URL, HUAWEI_*, SYNC_INTERVAL_MINUTES, CORS)
 │   │   ├── db.py                   # engine SQLModel + get_session
+│   │   ├── clock.py                # get_now (dependencia para fijar la hora en tests)
 │   │   ├── models/                 # SQLModel entities
-│   │   │   ├── domain.py           # WorkoutType, HRZone, ProgressionPoint, PlannedVsActual, Split
-│   │   │   ├── workout.py          # Workout, CardioDetail, StrengthDetail + recompute_strength_summary
+│   │   │   ├── domain.py           # WorkoutType, SessionKind, SessionStatus, HRZone, ProgressionPoint, Split
+│   │   │   ├── workout.py          # Workout, CardioDetail, WorkoutExercise, ExerciseSet + recompute_strength_summary
 │   │   │   ├── periodization.py    # Macrociclo, Mesociclo, Microciclo, SesionPlanificada
+│   │   │   ├── training.py         # AvailabilityWindow/Exception, TrainingPreferences, WeekPlan, RecommendedSession, PlanChange
 │   │   │   └── auth.py             # OAuthToken, UserProfile (singleton id=1)
 │   │   ├── repositories/           # Capa de acceso a datos
 │   │   │   ├── workout_repo.py
@@ -45,8 +54,21 @@ compi/
 │   │   │   ├── workouts.py         # /api/workouts, /metrics
 │   │   │   ├── metrics.py          # /api/metrics/volume, /load
 │   │   │   ├── plans.py            # /api/plans/macrocycles, .../progression
+│   │   │   ├── availability.py     # /api/availability, /api/preferences, /api/exercises
+│   │   │   ├── recommendations.py  # /api/recommendations/week, /sessions, /evaluation
+│   │   │   ├── training_schemas.py # Esquemas Pydantic del recomendador
 │   │   │   └── auth.py             # /api/auth/huawei/login, /callback
 │   │   └── services/               # Lógica de negocio (Req 6, 8, 9)
+│   │       ├── week_service.py     # Semana recomendada: generar, recalcular, registrar, evaluar
+│   │       ├── recommender/        # Funciones puras del recomendador
+│   │       │   ├── availability.py # Ventanas habituales + excepciones -> huecos concretos
+│   │       │   ├── scheduler.py    # Ubicar sesiones en huecos y re-ubicarlas (place / replan)
+│   │       │   ├── catalog.py      # Ejercicios y plantillas de fuerza
+│   │       │   ├── training.py     # Prescripción por historial (doble progresión, deload, carrera +10 %)
+│   │       │   ├── duration.py     # Duración estimada y factor aprendido
+│   │       │   ├── shorten.py      # Recortar una sesión para que quepa en una ventana
+│   │       │   ├── compare.py      # Recomendado vs realizado
+│   │       │   └── types.py        # Prescription, Slot y formatos
 │   │       ├── dedup.py            # partition_new_workouts (Property 1)
 │   │       ├── token_refresh.py    # needs_refresh (Property 11)
 │   │       ├── sync_service.py     # SyncService + APScheduler
@@ -109,7 +131,7 @@ Endpoints principales:
 - `GET /health` — health check
 - `GET /api/workouts` — lista workouts
 - `GET /api/workouts/{id}` — detalle (404 si no existe)
-- `POST /api/workouts/{id}/strength-detail` — registro manual (Req 3.5)
+- `PUT /api/workouts/{id}/exercises` — registro de fuerza serie a serie; reemplaza el registro anterior (Req 3.5)
 - `GET /api/workouts/{id}/metrics` — zonas FC
 - `GET /api/metrics/volume` — volumen agregado
 - `GET /api/metrics/load` — carga de entrenamiento agregada
@@ -118,6 +140,22 @@ Endpoints principales:
 - `GET /api/plans/{id}/progression` — carga objetivo por microciclo
 - `GET /api/auth/huawei/login` — inicia el flujo OAuth (redirige a Huawei)
 - `GET /api/auth/huawei/callback` — intercambia el code por tokens y persiste el refresh token
+
+Recomendador semanal:
+
+- `GET /api/availability` — semana habitual y excepciones
+- `PUT /api/availability/windows` — reemplaza la semana habitual (400 si se solapan ventanas del mismo día)
+- `POST /api/availability/exceptions` · `DELETE /api/availability/exceptions/{id}` — excepción de una fecha (sin horas bloquea el día)
+- `GET|PUT /api/preferences` — sesiones por semana, duraciones, zona horaria, ejercicios excluidos
+- `GET /api/exercises` — catálogo de ejercicios
+- `GET /api/recommendations/week?day=` — semana guardada (404 hasta generarla)
+- `POST /api/recommendations/week` — genera la semana; con `regenerate` rehace solo lo pendiente
+- `POST /api/recommendations/week/{id}/recalculate` — re-ubica lo pendiente en las ventanas que quedan
+- `GET /api/recommendations/sessions/{id}` — sesión con su comparación recomendado vs realizado
+- `POST /api/recommendations/sessions/{id}/log|skip|reopen` — registrar, saltar o reabrir una sesión
+- `GET /api/recommendations/evaluation` — duración estimada vs real, adherencia y progresión
+
+Editar la disponibilidad recalcula las sesiones pendientes de las semanas abiertas y devuelve en `changes` qué cambió y por qué.
 
 Variables de entorno (ver `backend/.env.example`):
 
@@ -147,6 +185,8 @@ Los tests se organizan en:
 - `test_metrics_properties.py` — PBT para Properties 4 (zonas FC), 5 (volumen) y 6 (carga)
 - `test_periodization_properties.py` — PBT para Properties 2 (jerarquía), 7 (progresión) y 8 (comparación)
 - `test_api.py` — routers con TestClient; PBT Property 12 (404) + smoke tests de plans y metrics
+- `test_recommender.py` — funciones puras del recomendador: duración, recorte, disponibilidad, scheduler, prescripción y comparación (unitarias + PBT)
+- `test_recommendations_api.py` — disponibilidad, preferencias y semana recomendada de punta a punta (reloj fijado con `get_now`)
 
 Cobertura de las 12 propiedades de corrección del design:
 
@@ -195,7 +235,7 @@ Scripts disponibles (`pnpm <script>`): `dev`, `build`, `start`, `lint`, `typeche
 Vistas implementadas:
 
 - `/` — Dashboard con métricas agregadas y últimos workouts
-- `/workouts/[id]` — Detalle cardio (zonas FC, pace) o fuerza (volumen + formulario manual de `StrengthDetail`)
+- `/workouts/[id]` — Detalle cardio (zonas FC, pace) o fuerza (volumen + formulario manual; pendiente de adaptar al registro por serie)
 - `/plan` — Lista de macrociclos y progresión objetivo por microciclo
 
 PWA: `manifest.json` + iconos SVG + service worker en `public/sw.js` (cache-first para estáticos, network-first para navegaciones, registro client-side en `layout.tsx`).
@@ -204,4 +244,4 @@ PWA: `manifest.json` + iconos SVG + service worker en `public/sw.js` (cache-firs
 
 - `.kiro/specs/compi-training-platform/requirements.md` — requisitos del MVP
 - `.kiro/specs/compi-training-platform/design.md` — diseño, fórmulas y propiedades de corrección
-- `.kiro/specs/compi-training-platform/tasks.md` — plan de implementación completo
+- `.kiro/specs/compi-training-platform/tasks.md` — plan de implementación (MVP + tarea 18, recomendador semanal)
