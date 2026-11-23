@@ -1,10 +1,17 @@
 import type {
+  Availability,
+  DateException,
   CatalogExercise,
+  DurationEvaluation,
   ExerciseIn,
+  HealthCoverage,
   HRZonesResponse,
   Macrociclo,
   MetricsResponse,
   ProgressionResponse,
+  RecommendedWeek,
+  TimeWindow,
+  TrainingPreferences,
   Workout,
   WorkoutType,
 } from "./types";
@@ -38,6 +45,7 @@ function describe(body: unknown, fallback: string): string {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
+    cache: "no-store",
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
   const body = await response.json().catch(() => null);
@@ -48,6 +56,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  healthCoverage: () => request<HealthCoverage[]>("/api/healthkit/coverage"),
+  evaluateDuration: (source: string) => request<DurationEvaluation>("/api/healthkit/duration-evaluation", {
+    method: "POST", body: JSON.stringify({ source }),
+  }),
   listWorkouts: (params: { type?: WorkoutType; limit?: number; offset?: number } = {}) => {
     const query = new URLSearchParams();
     if (params.type) query.set("workout_type", params.type);
@@ -72,4 +84,22 @@ export const api = {
   listMacrocycles: () => request<Macrociclo[]>("/api/plans/macrocycles"),
   macrocicloProgression: (id: number) =>
     request<ProgressionResponse>(`/api/plans/${id}/progression`),
+  availability: () => request<Availability>("/api/availability"),
+  saveWindows: (windows: TimeWindow[]) => request<Availability>("/api/availability/windows", {
+    method: "PUT", body: JSON.stringify(windows),
+  }),
+  addException: (exception: DateException) => request<Availability>("/api/availability/exceptions", {
+    method: "POST", body: JSON.stringify(exception),
+  }),
+  deleteException: (id: number) => request<Availability>(`/api/availability/exceptions/${id}`, {
+    method: "DELETE",
+  }),
+  preferences: () => request<TrainingPreferences>("/api/preferences"),
+  savePreferences: (preferences: TrainingPreferences) => request<TrainingPreferences>("/api/preferences", {
+    method: "PUT", body: JSON.stringify(preferences),
+  }),
+  week: (day: string) => request<RecommendedWeek>(`/api/recommendations/week?day=${encodeURIComponent(day)}`),
+  generateWeek: (day: string, regenerate: boolean) => request<RecommendedWeek>("/api/recommendations/week", {
+    method: "POST", body: JSON.stringify({ day, regenerate }),
+  }),
 };

@@ -10,8 +10,8 @@ def partition_new_workouts(
 ) -> tuple[list[ExternalWorkout], list[ExternalWorkout]]:
     """Split a batch of fetched workouts into (new, skipped) by external_id.
 
-    - `new`: workouts whose external_id is NOT in `existing_ids`.
-    - `skipped`: workouts whose external_id IS in `existing_ids` (Req 6.2 dedup).
+    - `new`: first occurrences of previously unseen external ids.
+    - `skipped`: ids already stored or repeated within the same response.
 
     Insertion order from `fetched` is preserved within each output list.
     """
@@ -22,5 +22,6 @@ def partition_new_workouts(
         if w.external_id in existing:
             skipped.append(w)
         else:
+            existing.add(w.external_id)
             new.append(w)
     return new, skipped

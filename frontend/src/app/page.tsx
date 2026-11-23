@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { HealthOverview } from "@/components/HealthOverview";
 import { api } from "@/lib/api";
 import type { MetricsResponse, Workout } from "@/lib/types";
 
@@ -33,6 +34,7 @@ export default function DashboardPage() {
     <div>
       <h1>Compi</h1>
       <p className="muted">Resumen de tus entrenamientos.</p>
+      <HealthOverview />
 
       <div className="card">
         <h2>Métricas agregadas</h2>

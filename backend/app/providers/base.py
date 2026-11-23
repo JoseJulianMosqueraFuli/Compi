@@ -59,6 +59,10 @@ class ExternalWorkout(BaseModel):
 class WorkoutProvider(ABC):
     """Common interface for any external workout source (Req 5.1, 5.3)."""
 
+    def close(self) -> None:
+        """Providers without a network client do not own any resources."""
+        return None
+
     @abstractmethod
     def authenticate(self) -> AuthResult:
         """Authenticate against the provider (no-op for MockProvider, Req 5.4)."""

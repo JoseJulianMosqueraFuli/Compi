@@ -2,14 +2,9 @@
 
 ## Overview
 
-Compi es una plataforma personal de entrenamiento (MVP) que sincroniza entrenamientos desde una fuente externa (Huawei Health Kit), los persiste de forma estructurada, calcula métricas de rendimiento y permite planificar mediante periodización (macrociclo → mesociclo → microciclo → sesión planificada), comparando lo planificado con lo realmente ejecutado y exponiendo el resultado a través de una PWA.
+El recorrido principal empieza en Salud de Apple, continúa en la app SwiftUI y llega al receptor HTTPS del computador. El modelo de observaciones guarda el dato de origen y el recomendador conserva por separado lo prescrito y lo registrado. El documento de [arquitectura vigente](../../../docs/arquitectura.md) define límites, seguridad, evaluación y evolución a AWS.
 
-El diseño se organiza en cuatro grandes piezas:
-
-1. **Backend FastAPI** con arquitectura por capas (API → servicios → repositorios → modelos).
-2. **Capa de sincronización** basada en la abstracción `WorkoutProvider`, con `MockProvider` para desarrollo inmediato y `HuaweiProvider` para producción.
-3. **Base de datos PostgreSQL** con un modelo de datos que cubre entrenamientos (cardio/fuerza), detalle de fuerza, jerarquía de periodización y persistencia de tokens OAuth.
-4. **Frontend Next.js (PWA)** con dashboard, vistas de entrenamiento cardio/fuerza y vista de plan.
+El MVP mantiene el monolito modular FastAPI, PostgreSQL y la PWA Next.js. El planificador combina horario, acceso al gimnasio, preferencias e historial de fuerza. Conserva las razones de cada sesión y el motivo de sus cambios. Las correcciones de HealthKit se aplican al historial importado. Una evaluación retrospectiva de duración utiliza ese historial sin alterar un plan aceptado.
 
 ### Decisión técnica resuelta: ORM y migraciones
 
@@ -47,6 +42,9 @@ graph TD
         Huawei[HuaweiProvider]
     end
 
+    HealthKit[Salud de Apple] --> iPhone[Compi iOS]
+    iPhone -->|HTTPS en Wi-Fi| Mobile[Receptor de lotes]
+    Mobile --> DB
     DB[(PostgreSQL)]
     HK[Huawei Health Kit]
 
@@ -109,18 +107,7 @@ Esto satisface el Requirement 2.1 (directorios `backend/`, `frontend/`, `docs/`)
 
 ### Configuración por entorno
 
-`app/config.py` usa `pydantic-settings` para leer variables de entorno, incluyendo `DATABASE_URL`, `HUAWEI_CLIENT_ID`, `HUAWEI_CLIENT_SECRET`, `HUAWEI_REDIRECT_URI` y `SYNC_INTERVAL_MINUTES`. La presencia o ausencia de las credenciales de Huawei determina el proveedor activo (Requirement 1.4 y 5.4).
-
-### Selección del proveedor activo
-
-```mermaid
-flowchart TD
-    Start[Arranque del backend] --> Check{Credenciales Huawei<br/>configuradas?}
-    Check -->|No| UseMock[Proveedor activo = MockProvider]
-    Check -->|Si| HasToken{Existe Token_De_Refresco<br/>persistido?}
-    HasToken -->|Si| UseHuawei[Proveedor activo = HuaweiProvider]
-    HasToken -->|No| OAuth[Flujo OAuth disponible<br/>fallback MockProvider]
-```
+El modo habitual recibe HealthKit y deja el planificador periódico apagado. `LEGACY_SYNC_MODE=huawei` requiere configuración y autorización válidas; `demo` habilita el proveedor sintético en una base de pruebas separada. Ver [configuración local](../../../docs/operacion-local.md).
 
 ## Components and Interfaces
 
@@ -414,7 +401,7 @@ _Para cualquier_ par de valores planificado y real asociados a una sesión, la c
 
 ### Property 9: Selección de proveedor según configuración
 
-_Para cualquier_ estado de configuración (presencia o ausencia de credenciales de Huawei y de un token de refresco persistido), el proveedor seleccionado debe seguir la regla determinista: sin credenciales se selecciona el `MockProvider`; con credenciales y token válido se selecciona el `HuaweiProvider`.
+El arranque en modo personal mantiene inactivo el sincronizador periódico. El modo demo selecciona el simulador de forma explícita. El modo Huawei exige credenciales y token persistido.
 
 **Validates: Requirements 1.4, 11.1**
 
@@ -446,7 +433,7 @@ El backend traduce errores de dominio a respuestas HTTP coherentes y registra el
 | Entrada inválida en creación de planes / StrengthDetail | Validación con esquemas Pydantic/SQLModel                                                                                     | `422 Unprocessable Entity`         |
 | `external_id` duplicado durante sincronización          | Omisión silenciosa (no es un error): el entrenamiento se salta y se registra a nivel debug                                    | n/a (dedup)                        |
 | Token de refresco expirado                              | `HuaweiProvider` intenta renovar; si la renovación falla, se registra error y la sincronización se aborta sin corromper datos | log + reintento en siguiente ciclo |
-| Credenciales de Huawei ausentes                         | Fallback automático a `MockProvider` (no es error)                                                                            | n/a                                |
+| Credenciales de Huawei ausentes                         | Modo Huawei registra fallo de configuración y espera autorización                                                                            | n/a                                |
 | Fallo de OAuth en callback                              | Respuesta de error y no se persiste token                                                                                     | `400 Bad Request`                  |
 | Fallo de conexión a la base de datos                    | Excepción registrada; la petición devuelve error de servidor                                                                  | `500 Internal Server Error`        |
 | Fallo del proveedor externo durante `fetch_workouts`    | Se captura, se registra y la sincronización se reintenta en el siguiente ciclo programado                                     | log + reintento                    |

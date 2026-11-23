@@ -75,6 +75,22 @@ export interface MetricsResponse {
   total: number;
 }
 
+export type HealthKind = "workout" | "heart_rate" | "sleep" | "body_mass";
+
+export interface HealthCoverage {
+  kind: HealthKind;
+  samples: number;
+  sources: string[];
+  last_batch: string | null;
+}
+
+export interface DurationEvaluation {
+  observed_sessions: number;
+  evaluated_sessions: number;
+  baseline: { mae_minutes: number; underestimated: number } | null;
+  by_activity: { mae_minutes: number; underestimated: number } | null;
+}
+
 export interface HRZone {
   zone: number;
   lower_bpm: number;
@@ -103,4 +119,59 @@ export interface ProgressionPoint {
 export interface ProgressionResponse {
   macrociclo_id: number;
   points: ProgressionPoint[];
+}
+
+export interface TimeWindow {
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  gym_access: boolean;
+}
+
+export interface DateException {
+  day: string;
+  start_time: string | null;
+  end_time: string | null;
+  gym_access: boolean;
+  note: string | null;
+}
+
+export interface Availability {
+  windows: (TimeWindow & { id: number })[];
+  exceptions: (DateException & { id: number })[];
+}
+
+export interface TrainingPreferences {
+  timezone: string;
+  strength_sessions_per_week: number;
+  run_sessions_per_week: number;
+  walk_sessions_per_week: number;
+  strength_minutes: number;
+  run_minutes: number;
+  walk_minutes: number;
+  excluded_exercises: string[];
+}
+
+export interface RecommendedWeek {
+  week_start: string;
+  week_end: string;
+  sessions: {
+    id: number;
+    title: string;
+    status: "pending" | "done" | "partial" | "skipped";
+    day: string | null;
+    start_time: string | null;
+    end_time: string | null;
+    planned_minutes: number | null;
+    full_minutes: number;
+    reasons: string[];
+    prescription: {
+      guidance: string | null;
+      exercises: {
+        key: string;
+        name: string;
+        sets: { reps: number; weight_kg: number | null; rest_s: number }[];
+      }[];
+    };
+  }[];
 }

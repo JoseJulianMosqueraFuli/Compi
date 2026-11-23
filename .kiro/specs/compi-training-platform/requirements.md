@@ -2,11 +2,9 @@
 
 ## Introduction
 
-Compi es una plataforma personal de entrenamiento (MVP) que sincroniza los entrenamientos del usuario desde Huawei Health Kit, los almacena de forma estructurada, calcula métricas de rendimiento y permite planificar entrenamientos mediante periodización (macrociclo → mesociclo → microciclo → sesión planificada). La plataforma compara lo planificado frente a lo realmente ejecutado y muestra el progreso a través de una PWA.
+Compi es el complemento personal de Salud de Apple para registrar fuerza en gimnasio, caminatas y carreras al aire libre y recomendar sesiones que quepan en un horario semanal editable. El reloj Huawei y el iPhone pueden aportar muestras. La aplicación nativa importa las categorías autorizadas desde HealthKit y conserva la app de origen. El panel, el historial y el motor de reglas se ejecutan en el computador.
 
-El sistema se construye con un backend FastAPI, un frontend Next.js (PWA), una base de datos PostgreSQL y una integración con Huawei Health Kit mediante OAuth. La capa de sincronización usa una abstracción de proveedor (`WorkoutProvider`) con una implementación simulada (`MockProvider`) para desarrollo inmediato y una implementación real (`HuaweiProvider`) que se activa cuando Huawei aprueba el acceso.
-
-Este documento describe los requisitos del MVP organizados según las fases del plan: onboarding de Huawei, cimientos del proyecto, modelo de datos, capa de sincronización, API y lógica, frontend PWA y cierre del MVP.
+La implementación inicial usa SwiftUI, FastAPI, SQLModel/Alembic, PostgreSQL y una PWA Next.js. La integración directa de Huawei permanece como un conector opcional. La [arquitectura y evolución](../../../docs/arquitectura.md) recoge las decisiones, los ensayos de MLOps y los criterios para pasar a otros entornos.
 
 ## Glossary
 
@@ -15,7 +13,7 @@ Este documento describe los requisitos del MVP organizados según las fases del 
 - **Frontend**: Aplicación Next.js entregada como PWA (Progressive Web App).
 - **Base_De_Datos**: Instancia PostgreSQL que persiste los datos del sistema.
 - **Workout**: Entrenamiento real ejecutado por el usuario; incluye tipo (cardio o fuerza), duración, frecuencia cardiaca, calorías y datos enriquecidos según el tipo.
-- **StrengthDetail**: Detalle opcional de fuerza con enriquecimiento manual (ejercicio, series, repeticiones, peso).
+- **Registro de fuerza**: WorkoutExercise identifica el ejercicio y ExerciseSet conserva peso, repeticiones, descanso y esfuerzo de cada serie.
 - **Macrociclo**: Periodo de planificación de mayor nivel que agrupa mesociclos.
 - **Mesociclo**: Periodo de planificación intermedio que agrupa microciclos.
 - **Microciclo**: Periodo de planificación corto (típicamente semanal) que agrupa sesiones planificadas.
@@ -39,7 +37,7 @@ Este documento describe los requisitos del MVP organizados según las fases del 
 1. THE Backend SHALL almacenar `client_id`, `client_secret` y `redirect_uri` de Huawei como variables de entorno.
 2. WHERE existan credenciales de Huawei configuradas, THE Backend SHALL exponer un flujo OAuth que obtenga un Token_De_Refresco de Huawei Health Kit.
 3. WHEN el flujo OAuth de Huawei completa correctamente, THE Backend SHALL persistir el Token_De_Refresco en la Base_De_Datos.
-4. IF las credenciales de Huawei no están configuradas, THEN THE Backend SHALL utilizar el MockProvider como proveedor de entrenamientos.
+4. El modo personal comienza con el conector periódico apagado. Los ejemplos sintéticos requieren modo demo explícito y una base separada.
 
 ### Requirement 2: Cimientos del proyecto y entorno de desarrollo
 
@@ -47,7 +45,7 @@ Este documento describe los requisitos del MVP organizados según las fases del 
 
 #### Acceptance Criteria
 
-1. THE Compi SHALL organizar el repositorio en los directorios `backend/`, `frontend/` y `docs/`.
+1. THE Compi SHALL organizar el repositorio en los directorios `ios/`, `backend/`, `frontend/` y `docs/`.
 2. THE Compi SHALL proporcionar una configuración de docker-compose que levante una instancia de Base_De_Datos PostgreSQL para desarrollo local.
 3. THE Backend SHALL leer su configuración desde variables de entorno.
 4. THE Compi SHALL incluir un archivo README con instrucciones de instalación y ejecución, y un archivo `.gitignore`.
@@ -61,8 +59,8 @@ Este documento describe los requisitos del MVP organizados según las fases del 
 1. THE Base_De_Datos SHALL almacenar cada Workout con tipo (cardio o fuerza), duración, frecuencia cardiaca y calorías.
 2. WHERE un Workout es de tipo cardio, THE Base_De_Datos SHALL almacenar datos de GPS, ritmo (pace) y parciales (splits).
 3. WHERE un Workout es de tipo fuerza, THE Base_De_Datos SHALL almacenar un resumen del entrenamiento de fuerza.
-4. THE Base_De_Datos SHALL permitir asociar a un Workout de fuerza un StrengthDetail opcional con ejercicio, series, repeticiones y peso.
-5. WHEN un usuario registra manualmente un StrengthDetail, THE Backend SHALL persistir el StrengthDetail asociado al Workout correspondiente.
+4. THE Base_De_Datos SHALL permitir asociar a un Workout de fuerza ejercicios con peso, repeticiones, descanso y esfuerzo independientes por serie.
+5. WHEN un usuario registra manualmente sus ejercicios, THE Backend SHALL persistir sus series asociadas al Workout correspondiente.
 
 ### Requirement 4: Modelo de periodización
 
@@ -139,19 +137,25 @@ Este documento describe los requisitos del MVP organizados según las fases del 
 4. WHEN el usuario consulta un Workout de tipo fuerza, THE Frontend SHALL mostrar el volumen, el progreso y un formulario de registro manual.
 5. THE Frontend SHALL mostrar una vista de plan con los niveles de macrociclo, mesociclo y microciclo y su progreso.
 
-### Requirement 11: Despliegue y cierre del MVP
+### Requirement 11. Operación personal y entrega
 
-**User Story:** Como desarrollador del sistema, quiero desplegar el sistema y activar el proveedor real de Huawei, para poder validar el MVP con datos reales.
+1. El panel y PostgreSQL se ejecutan en el computador. El único servicio ofrecido al iPhone por la red local es el receptor de lotes HTTPS emparejado.
+2. CI valida los componentes modificados con datos sintéticos. El despliegue de AWS y la promoción de modelos tienen ciclos independientes de la publicación de la aplicación.
 
-#### Acceptance Criteria
+### Requirement 12. Observaciones y privacidad
 
-1. WHEN Huawei aprueba el acceso a Health Kit, THE Backend SHALL utilizar el HuaweiProvider como proveedor de entrenamientos activo.
-2. THE Backend y la Base_De_Datos SHALL desplegarse en un servicio en la nube.
-3. THE Frontend SHALL desplegarse como PWA en un servicio de hospedaje web.
+1. Una persona selecciona qué leer de Salud: entrenamientos, frecuencia cardiaca, sueño y peso corporal. Cada muestra conserva su UUID, categoría, aplicación de origen, intervalo y unidad o categoría normalizada.
+2. Al perder la conexión, un lote pendiente se reintenta con el mismo contenido. El cursor y las altas, correcciones y bajas se confirman juntos. Una secuencia omitida o incompatible requiere reconciliación.
+3. El panel muestra muestras y última recepción por categoría. La ausencia de muestras es una cobertura desconocida para inferir actividad o recuperación.
+4. La telemetría técnica registra resultado y latencia. Los datos de salud, credenciales e identificadores individuales quedan en el circuito local protegido.
 
-## Supuestos y Decisiones Técnicas Abiertas
+### Requirement 13. Plan semanal y evaluación
 
-- **Decisión abierta — ORM y migraciones:** El usuario evalúa entre SQLAlchemy + Alembic y SQLModel para el acceso a datos y las migraciones del Backend. La preferencia actual del usuario es SQLModel por su ligereza para el MVP. Esta decisión no bloquea la definición de requisitos y se resolverá en la fase de diseño.
-  - Recomendación inicial: SQLModel (creado por el autor de FastAPI) se integra de forma natural con FastAPI y reduce duplicación entre modelos de Pydantic y tablas. Sin embargo, SQLModel no incluye migraciones, por lo que se recomienda combinarlo con Alembic. Si se prevé un modelo de datos complejo o consultas avanzadas, SQLAlchemy puro + Alembic ofrece mayor control y madurez. Para este MVP, SQLModel + Alembic es una opción equilibrada.
-- **Supuesto — Datos de prueba:** Mientras Huawei no apruebe el acceso, el desarrollo se realiza con el MockProvider y datos de prueba realistas.
-- **Supuesto — Usuario único:** El MVP asume un único usuario personal; la gestión de múltiples usuarios y la autenticación de usuarios finales queda fuera del alcance de este documento.
+1. La persona declara ventanas semanales en su zona horaria, acceso al gimnasio y excepciones por fecha. Puede revisar los motivos y los cambios de las sesiones de fuerza, carrera y caminata.
+2. La prescripción y el registro realizado son independientes. Un ejercicio admite series distintas de peso, repeticiones, descansos y esfuerzo.
+3. El primer experimento retrospectivo compara estimadores de duración sobre las mismas sesiones elegibles de una sola fuente. Registra tamaño, error en minutos y frecuencia de subestimación. Con historial insuficiente se presenta esa limitación.
+4. Futuras estimaciones de bienestar deben incluir evidencia, incertidumbre y la respuesta de la persona antes de influir en otros planes. Los objetivos físicos y el peso corporal se gestionan como datos personales. Una variación de peso por sí sola no determina grasa o masa muscular.
+
+## Alcance
+
+Una persona, un iPhone y un computador en la primera versión. La validación de extremo a extremo con hardware, los permisos reales por categoría, los servicios compartidos y el laboratorio en AWS tienen hitos propios en [tasks.md](tasks.md).

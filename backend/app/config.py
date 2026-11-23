@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,10 +25,12 @@ class Settings(BaseSettings):
 
     huawei_client_id: str | None = Field(
         default=None,
-        description="Huawei Health Kit OAuth client id. Absent -> MockProvider (Req 1.4).",
+        description="Huawei Health Kit OAuth client id for the optional legacy connector.",
     )
     huawei_client_secret: str | None = Field(default=None)
     huawei_redirect_uri: str | None = Field(default=None)
+    legacy_sync_mode: Literal["off", "huawei", "demo"] = "off"
+    healthkit_sync_token: SecretStr | None = None
 
     sync_interval_minutes: int = Field(
         default=60,

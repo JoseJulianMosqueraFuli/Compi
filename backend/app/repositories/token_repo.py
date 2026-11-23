@@ -37,8 +37,10 @@ class TokenRepository:
         self._session.flush()
         return token
 
-    def get_by_provider(self, provider: str) -> OAuthToken | None:
+    def get_by_provider(self, provider: str, *, for_update: bool = False) -> OAuthToken | None:
         stmt = select(OAuthToken).where(OAuthToken.provider == provider)
+        if for_update:
+            stmt = stmt.with_for_update().execution_options(populate_existing=True)
         return self._session.exec(stmt).first()
 
     def delete(self, provider: str) -> None:

@@ -1,0 +1,26 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', 'backend/app/models/health_schemas.py', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['ios/**', 'backend/app/models/health_schemas.py', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator-build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Compile the HealthKit companion for the iPhone simulator
+        run: >-
+          xcodebuild -project ios/Compi.xcodeproj -scheme Compi
+          -configuration Debug -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build

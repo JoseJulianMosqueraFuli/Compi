@@ -12,6 +12,7 @@ _settings = get_settings()
 engine = create_engine(
     _settings.database_url,
     echo=False,
+    hide_parameters=True,
     pool_pre_ping=True,
 )
 

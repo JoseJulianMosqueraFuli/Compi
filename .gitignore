@@ -245,6 +245,11 @@ Thumbs.db
 data/
 pgdata/
 
+# Local HealthKit pairing, TLS and experiment material
+.compi-local/
+DerivedData/
+xcuserdata/
+
 # Alembic compiled files
 *.pyc
 backend/alembic/versions/__pycache__/

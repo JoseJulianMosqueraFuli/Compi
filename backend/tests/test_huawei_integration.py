@@ -1,6 +1,7 @@
 """Integration tests for Huawei OAuth flow and HuaweiProvider (Req 1.2, 5.3, 6.4)."""
 from datetime import UTC, datetime
 from typing import Annotated, Any
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
@@ -12,7 +13,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from app.config import get_settings
 from app.db import get_session
 from app.models.auth import OAuthToken
-from app.providers.huawei import HuaweiAuthError, HuaweiProvider
+from app.providers.huawei import HuaweiAuthError, HuaweiFetchError, HuaweiProvider
 from app.providers.selection import build_provider
 from app.routers import auth as auth_router
 
@@ -38,6 +39,7 @@ class _FakeTransport(httpx.BaseTransport):
 
 @pytest.fixture
 def huawei_env(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("LEGACY_SYNC_MODE", "huawei")
     monkeypatch.setenv("HUAWEI_CLIENT_ID", "test-client")
     monkeypatch.setenv("HUAWEI_CLIENT_SECRET", "test-secret")
     monkeypatch.setenv("HUAWEI_REDIRECT_URI", "https://app.test/callback")
@@ -54,16 +56,21 @@ def test_build_provider_returns_huawei_when_configured(huawei_env) -> None:
     provider.close()
 
 
-def test_build_provider_returns_mock_when_unconfigured(monkeypatch) -> None:
-    """Without Huawei env vars, build_provider returns the MockProvider (Req 1.4)."""
+def test_demo_provider_requires_explicit_selection(monkeypatch) -> None:
+    """The demo only runs when selected, including on a fresh local installation."""
     from app.providers.mock import MockProvider
+    from app.providers.selection import ProviderUnavailableError
 
     monkeypatch.delenv("HUAWEI_CLIENT_ID", raising=False)
     monkeypatch.delenv("HUAWEI_CLIENT_SECRET", raising=False)
     monkeypatch.delenv("HUAWEI_REDIRECT_URI", raising=False)
+    monkeypatch.setenv("LEGACY_SYNC_MODE", "off")
     get_settings.cache_clear()
-    settings = get_settings()
-    provider = build_provider(settings, has_refresh_token=True)
+    with pytest.raises(ProviderUnavailableError):
+        build_provider(get_settings(), has_refresh_token=False)
+    monkeypatch.setenv("LEGACY_SYNC_MODE", "demo")
+    get_settings.cache_clear()
+    provider = build_provider(get_settings(), has_refresh_token=False)
     assert isinstance(provider, MockProvider)
     get_settings.cache_clear()
 
@@ -230,6 +237,15 @@ def test_huawei_provider_fetch_workouts_requires_auth(huawei_env) -> None:
     provider.close()
 
 
+@pytest.mark.parametrize("payload", [{"error": "unexpected"}, {"workouts": [None]}])
+def test_huawei_invalid_response_is_a_failed_sync(payload) -> None:
+    with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, json=payload))) as client:
+        provider = HuaweiProvider("id", "secret", "redirect", http_client=client)
+        provider.restore_tokens("access", "refresh", None)
+        with pytest.raises(HuaweiFetchError, match="invalid workout response"):
+            provider.fetch_workouts(datetime.now(UTC))
+
+
 def test_huawei_provider_authorize_url_contains_params(huawei_env) -> None:
     """The authorize URL must include the OAuth params (Req 1.2)."""
     provider = HuaweiProvider(
@@ -301,9 +317,12 @@ def test_auth_callback_persists_refresh_token(auth_app, auth_engine) -> None:
 
     auth_module.HuaweiProvider.__init__ = _patched_init  # type: ignore[assignment]
     try:
-        with TestClient(app_with_transport) as c:
-            response = c.get("/api/auth/huawei/callback?code=auth-code-1")
+        with TestClient(app_with_transport, base_url="https://app.test", follow_redirects=False) as c:
+            login = c.get("/api/auth/huawei/login")
+            state = parse_qs(urlparse(login.headers["location"]).query)["state"][0]
+            response = c.get("/api/auth/huawei/callback", params={"code": "auth-code-1", "state": state})
             assert response.status_code == 200, response.text
+            assert "compi_huawei_state" not in c.cookies
     finally:
         auth_module.HuaweiProvider.__init__ = real_init  # type: ignore[assignment]
 
@@ -330,6 +349,14 @@ def test_auth_callback_without_credentials_returns_400(auth_app) -> None:
             assert r.status_code == 400
     finally:
         get_settings.cache_clear()
+
+
+def test_callback_rejects_state_from_another_browser(auth_app) -> None:
+    with TestClient(auth_app, base_url="https://app.test", follow_redirects=False) as client:
+        client.get("/api/auth/huawei/login")
+        response = client.get("/api/auth/huawei/callback", params={"code": "unused", "state": "unrelated"})
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid OAuth state"
 
 
 def test_auth_login_redirects_when_configured(auth_app) -> None:

@@ -1,5 +1,4 @@
 """HuaweiProvider: real WorkoutProvider implementation against Huawei Health Kit (Req 5.3, 6.4)."""
-import logging
 from datetime import UTC, datetime, timedelta
 
 import httpx
@@ -13,8 +12,6 @@ from app.providers.base import (
     WorkoutProvider,
 )
 
-logger = logging.getLogger(__name__)
-
 DEFAULT_HUAWEI_AUTH_URL = "https://oauth-login.cloud.huawei.com/oauth2/v3/authorize"
 DEFAULT_HUAWEI_TOKEN_URL = "https://oauth-login.cloud.huawei.com/oauth2/v3/token"
 DEFAULT_HUAWEI_API_BASE = "https://health-api.cloud.huawei.com"
@@ -22,6 +19,10 @@ DEFAULT_HUAWEI_API_BASE = "https://health-api.cloud.huawei.com"
 
 class HuaweiAuthError(RuntimeError):
     """Raised when the OAuth flow fails (Req 1.3 - 400 callback)."""
+
+
+class HuaweiFetchError(RuntimeError):
+    """The provider did not return a valid workout response."""
 
 
 class HuaweiProvider(WorkoutProvider):
@@ -55,6 +56,14 @@ class HuaweiProvider(WorkoutProvider):
         if self._owns_http:
             self._http.close()
 
+    def restore_tokens(
+        self, access_token: str | None, refresh_token: str, expires_at: datetime | None,
+    ) -> None:
+        """Restore authorization for a new sync process from the local token store."""
+        self._access_token = access_token
+        self._refresh_token = refresh_token
+        self._expires_at = expires_at
+
     def build_authorize_url(self, state: str) -> str:
         """Compose the URL the user must visit to start the OAuth flow (Req 1.2)."""
         params = {
@@ -80,9 +89,9 @@ class HuaweiProvider(WorkoutProvider):
                 },
             )
             response.raise_for_status()
-        except httpx.HTTPError as exc:
-            raise HuaweiAuthError(f"token exchange failed: {exc}") from exc
-        return self._store(response.json())
+            return self._store(response.json())
+        except (httpx.HTTPError, ValueError, TypeError, OverflowError):
+            raise HuaweiAuthError("token exchange failed") from None
 
     def authenticate(self) -> AuthResult:
         """Force a fresh token using the stored refresh_token (Req 6.4)."""
@@ -99,16 +108,19 @@ class HuaweiProvider(WorkoutProvider):
                 },
             )
             response.raise_for_status()
-        except httpx.HTTPError as exc:
-            raise HuaweiAuthError(f"refresh failed: {exc}") from exc
-        return self._store(response.json())
+            return self._store(response.json())
+        except (httpx.HTTPError, ValueError, TypeError, OverflowError):
+            raise HuaweiAuthError("refresh failed") from None
 
     def _store(self, payload: dict) -> AuthResult:
-        self._access_token = payload.get("access_token")
+        if not isinstance(payload, dict) or not isinstance(payload.get("access_token"), str):
+            raise HuaweiAuthError("token response missing access token")
+        if not payload["access_token"]:
+            raise HuaweiAuthError("empty access token")
+        self._access_token = payload["access_token"]
         self._refresh_token = payload.get("refresh_token") or self._refresh_token
         expires_in = payload.get("expires_in")
-        if expires_in is not None:
-            self._expires_at = self._clock() + timedelta(seconds=int(expires_in))
+        self._expires_at = self._clock() + timedelta(seconds=int(expires_in)) if expires_in else None
         return AuthResult(
             success=True,
             access_token=self._access_token,
@@ -131,10 +143,16 @@ class HuaweiProvider(WorkoutProvider):
                 headers={"Authorization": f"Bearer {self._access_token}"},
             )
             response.raise_for_status()
-        except httpx.HTTPError as exc:
-            logger.warning("huawei fetch_workouts failed: %s", exc)
-            return []
-        return [self._map_workout(item) for item in response.json().get("workouts", [])]
+            payload = response.json()
+            if not isinstance(payload, dict) or not isinstance(payload.get("workouts"), list):
+                raise HuaweiFetchError("invalid workout response")
+            return [self._map_workout(item) for item in payload["workouts"]]
+        except httpx.HTTPStatusError as exc:
+            raise HuaweiFetchError(f"workout fetch returned HTTP {exc.response.status_code}") from None
+        except httpx.RequestError:
+            raise HuaweiFetchError("workout fetch transport failure") from None
+        except (KeyError, ValueError, TypeError, AttributeError, OSError, OverflowError):
+            raise HuaweiFetchError("invalid workout response") from None
 
     def _map_workout(self, item: dict) -> ExternalWorkout:
         """Map a Huawei workout dict to ExternalWorkout (Req 5.3, 6.2)."""

@@ -1,12 +1,13 @@
 """Property-based tests for provider abstraction (Property 9 and 10)."""
 from datetime import UTC, datetime
 
+import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from app.config import Settings
 from app.providers.mock import MockProvider
-from app.providers.selection import ProviderKind, select_provider_kind
+from app.providers.selection import ProviderKind, ProviderUnavailableError, select_provider_kind
 
 
 # Feature: compi-training-platform, Property 10: Datos del MockProvider bien formados
@@ -65,12 +66,14 @@ def test_select_provider_kind_deterministic(
     huawei_configured: bool, has_refresh_token: bool
 ) -> None:
     """Property 9: the rule is deterministic and matches the design."""
-    kind = select_provider_kind(huawei_configured, has_refresh_token)
-
-    if not huawei_configured or not has_refresh_token:
-        assert kind is ProviderKind.MOCK
+    assert select_provider_kind("demo", huawei_configured, has_refresh_token) is ProviderKind.MOCK
+    with pytest.raises(ProviderUnavailableError):
+        select_provider_kind("off", huawei_configured, has_refresh_token)
+    if huawei_configured and has_refresh_token:
+        assert select_provider_kind("huawei", huawei_configured, has_refresh_token) is ProviderKind.HUAWEI
     else:
-        assert kind is ProviderKind.HUAWEI
+        with pytest.raises(ProviderUnavailableError):
+            select_provider_kind("huawei", huawei_configured, has_refresh_token)
 
 
 # Feature: compi-training-platform, Property 9: select_provider_kind agrees with Settings
@@ -93,9 +96,8 @@ def test_select_provider_kind_matches_settings(
         huawei_client_secret=huawei_client_secret,
         huawei_redirect_uri=huawei_redirect_uri,
     )
-    kind = select_provider_kind(s.huawei_configured, has_token)
-
-    if not s.huawei_configured or not has_token:
-        assert kind is ProviderKind.MOCK
+    if s.huawei_configured and has_token:
+        assert select_provider_kind("huawei", s.huawei_configured, has_token) is ProviderKind.HUAWEI
     else:
-        assert kind is ProviderKind.HUAWEI
+        with pytest.raises(ProviderUnavailableError):
+            select_provider_kind("huawei", s.huawei_configured, has_token)

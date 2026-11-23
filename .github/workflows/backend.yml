@@ -1,0 +1,54 @@
+name: Backend
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  pull_request:
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: compi_ci
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: compi_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U compi_ci -d compi_ci"
+          --health-interval=3s --health-timeout=3s --health-retries=20
+    env:
+      DATABASE_URL: postgresql+psycopg://compi_ci:ci-only@127.0.0.1:5432/compi_ci
+      LEGACY_SYNC_MODE: 'off'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: '0.13.8'
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --locked --extra dev --python 3.12
+      - run: uv run --no-sync ruff check app tests
+      - name: Exercise the migration chain and the latest downgrade
+        run: |
+          uv run --no-sync alembic upgrade head
+          uv run --no-sync alembic downgrade -1
+          uv run --no-sync alembic upgrade head
+      - name: Run the test suite including the migrated PostgreSQL integration
+        env:
+          COMPI_TEST_POSTGRES: '1'
+        run: uv run --no-sync pytest

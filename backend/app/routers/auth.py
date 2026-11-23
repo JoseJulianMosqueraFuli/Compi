@@ -1,8 +1,9 @@
 """Auth router: Huawei OAuth start and callback (Req 1.2, 1.3)."""
 import secrets
+from contextlib import closing
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
@@ -14,6 +15,8 @@ from app.repositories.token_repo import TokenRepository
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SessionDep = Annotated[Session, Depends(get_session)]
+STATE_COOKIE = "compi_huawei_state"
+CALLBACK_PATH = "/api/auth/huawei/callback"
 
 
 @router.get("/huawei/login")
@@ -30,15 +33,22 @@ def huawei_login() -> RedirectResponse:
         client_secret=settings.huawei_client_secret,  # type: ignore[arg-type]
         redirect_uri=settings.huawei_redirect_uri,  # type: ignore[arg-type]
     )
-    state = secrets.token_urlsafe(16)
-    # NOTE: `state` should be persisted in a short-lived store tied to the
-    # session cookie; the MVP keeps the provider stateless for simplicity.
-    return RedirectResponse(provider.build_authorize_url(state))
+    state = secrets.token_urlsafe(32)
+    with closing(provider):
+        response = RedirectResponse(provider.build_authorize_url(state))
+    response.set_cookie(
+        STATE_COOKIE, state, max_age=600, path=CALLBACK_PATH, httponly=True,
+        secure=settings.huawei_redirect_uri.startswith("https://"), samesite="lax",
+    )
+    return response
 
 
 @router.get("/huawei/callback")
 def huawei_callback(
+    request: Request,
+    response: Response,
     code: str = Query(..., min_length=1),
+    state: str = Query(default="", max_length=128),
     session: SessionDep = ...,  # type: ignore[assignment]
 ) -> dict[str, str]:
     """Trade the authorization code for tokens and persist the refresh token (Req 1.3)."""
@@ -48,13 +58,17 @@ def huawei_callback(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Huawei credentials not configured",
         )
+    expected = request.cookies.get(STATE_COOKIE, "")
+    if not expected or not secrets.compare_digest(expected.encode(), state.encode()):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OAuth state")
     provider = HuaweiProvider(
         client_id=settings.huawei_client_id,  # type: ignore[arg-type]
         client_secret=settings.huawei_client_secret,  # type: ignore[arg-type]
         redirect_uri=settings.huawei_redirect_uri,  # type: ignore[arg-type]
     )
     try:
-        result = provider.exchange_code(code)
+        with closing(provider):
+            result = provider.exchange_code(code)
     except HuaweiAuthError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="OAuth callback failed"
@@ -70,4 +84,5 @@ def huawei_callback(
         expires_at=result.expires_at,
     )
     session.commit()
+    response.delete_cookie(STATE_COOKIE, path=CALLBACK_PATH)
     return {"status": "ok"}

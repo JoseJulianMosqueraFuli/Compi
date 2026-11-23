@@ -5,6 +5,8 @@ from datetime import UTC, date, datetime, time, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlmodel import Session, col, select
 
 from app.models.domain import SessionKind, SessionStatus, WorkoutType
@@ -83,9 +85,11 @@ class WorkoutMismatchError(ValueError):
 def get_preferences(session: Session) -> TrainingPreferences:
     prefs = session.get(TrainingPreferences, TRAINING_PREFERENCES_SINGLETON_ID)
     if prefs is None:
-        prefs = TrainingPreferences()
-        session.add(prefs)
-        session.flush()
+        insert = pg_insert if session.get_bind().dialect.name == "postgresql" else sqlite_insert
+        session.execute(
+            insert(TrainingPreferences).values(**TrainingPreferences().model_dump()).on_conflict_do_nothing()
+        )
+        prefs = session.get_one(TrainingPreferences, TRAINING_PREFERENCES_SINGLETON_ID)
     return prefs
 
 

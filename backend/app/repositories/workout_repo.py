@@ -1,5 +1,5 @@
 """Data-access layer for Workout and CardioDetail (Req 6.2, 6.3, 7.1, 7.4)."""
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import date, datetime
 
 from sqlmodel import Session, select
@@ -22,6 +22,16 @@ class WorkoutRepository:
         """Return True iff a workout with this external_id is already stored (Req 6.2)."""
         stmt = select(Workout.id).where(Workout.external_id == external_id)
         return self._session.exec(stmt).first() is not None
+
+    def existing_external_ids(self, external_ids: Iterable[str]) -> set[str]:
+        """Look up the candidate ids across the whole history in bounded SQL queries."""
+        candidates = list(set(external_ids))
+        existing: set[str] = set()
+        for offset in range(0, len(candidates), 500):
+            chunk = candidates[offset : offset + 500]
+            stmt = select(Workout.external_id).where(Workout.external_id.in_(chunk))
+            existing.update(self._session.exec(stmt))
+        return existing
 
     def insert(self, workout: Workout) -> Workout:
         """Persist a new workout. Caller is responsible for deduplication (Req 6.3)."""
