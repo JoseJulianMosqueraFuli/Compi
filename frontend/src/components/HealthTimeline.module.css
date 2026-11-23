@@ -1,0 +1,15 @@
+.timeline { margin: 1.75rem 0; }
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: .75rem;
+}
+.controls select, .controls input { display: block; margin-top: .3rem; }
+.chart, .scroll { overflow-x: auto; }
+.chart svg { display: block; width: 100%; min-width: 32rem; }
+.chart text { font: 12px ui-sans-serif, system-ui, sans-serif; fill: var(--fg-muted); }
+.grid { stroke: var(--bg-elevated); }
+.point { fill: var(--accent); }
+.interval { stroke: var(--accent); stroke-width: 8px; }
+.details { margin: .75rem 0; }
+.details summary { cursor: pointer; }

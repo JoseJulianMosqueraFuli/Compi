@@ -243,12 +243,12 @@ Plan de implementación incremental para el MVP de Compi. El backend se construy
     - _Requirements: 10.2, 10.3, 10.4, 10.5_
 
 - [x] 16. Configuración de despliegue
-  - [x] 16.1 Crear el Dockerfile del backend y la configuración de despliegue en la nube
-    - Crear `backend/Dockerfile` y la configuración para desplegar backend + PostgreSQL en un servicio en la nube
+  - [x] 16.1 Crear el Dockerfile del backend para la instalación local
+    - Empaquetar el backend e iniciar PostgreSQL local mediante Compose
     - _Requirements: 11.2_
 
-  - [x] 16.2 Crear la configuración de despliegue del frontend
-    - Configurar el despliegue de la PWA en un servicio de hospedaje web
+  - [x] 16.2 Crear la configuración de build del frontend
+    - Construir el frontend Next.js con sus rutas y assets instalables
     - _Requirements: 11.3_
 
 - [x] 17. Checkpoint final - Asegurar que las pruebas pasan
@@ -272,9 +272,23 @@ Plan de implementación incremental para el MVP de Compi. El backend se construy
   - [x] 18.7 Restaurar el cliente API del frontend y adaptar el registro de fuerza
     - `src/lib/api.ts` y `src/lib/types.ts` nunca se versionaron (el `lib/` del `.gitignore` de Python los ignoraba); reescritos según los esquemas actuales del backend
     - `/workouts/[id]` registra serie a serie con `PUT /api/workouts/{id}/exercises` (catálogo o nombre libre, editable)
-  - [ ] 18.8 Implementar las vistas del recomendador en el frontend
-    - Disponibilidad y excepciones, preferencias, semana recomendada con registro/salto/reapertura
-  - [ ] 18.9 Documentar requisitos y diseño del recomendador en `requirements.md` y `design.md`
+  - [x] 18.8 Implementar horario semanal, excepciones, preferencias y semana recomendada con sus motivos en `/semana`
+  - [ ] 18.10 Completar acciones de registro/salto/reapertura desde cada sesión semanal (API disponible)
+  - [x] 18.9 Documentar requisitos y diseño del recomendador en `requirements.md` y `design.md`
+
+## Iteración local de datos y recomendaciones
+
+- [x] 19. App SwiftUI con selección por categoría, HealthKit, lote pendiente protegido y avance tras confirmación.
+- [x] 20. Receptor HTTPS del iPhone, aislamiento del panel y transacción con altas, correcciones, bajas y cursor por categoría.
+- [x] 21. Panel de cobertura y duración por fuente. Conciliación explícita de una muestra con el registro editable.
+- [x] 22. Experimento cronológico de duración y registro opcional de métricas agregadas en MLflow local.
+- [x] 23. Comprobación de base en readiness, latencia y resultados del receptor, fallo visible del sincronizador directo.
+- [x] 24. CI independiente para backend/PostgreSQL, frontend e iOS. Plantilla de infraestructura para un ensayo sintético bajo demanda.
+- [ ] 25. Validar Xcode/iPhone físico, carga histórica desde Salud, interrupción, borrado por origen y restauración con una base independiente.
+- [ ] 26. Revisar evidencia personal antes de promover una política del recomendador. Registrar la decisión y probar reversión.
+- [ ] 27. Ejecutar y medir el laboratorio AWS autorizado, verificar retiro de recursos, comparar exportadores de telemetría y medir costo real por ejecución.
+
+Los criterios del siguiente hito y el alcance de cada métrica están en [la arquitectura](../../../docs/arquitectura.md).
 
 ## Notes
 

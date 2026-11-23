@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { DurationEvaluation, HealthCoverage, HealthKind } from "@/lib/types";
+import type { DurationEvaluation, HealthCoverage, HealthKind, Workout } from "@/lib/types";
+import { ImportedWorkouts } from "./ImportedWorkouts";
+import { HealthTimeline } from "./HealthTimeline";
 
 const names: Record<HealthKind, string> = {
   workout: "Entrenamientos", heart_rate: "Frecuencia cardiaca", sleep: "Sueño", body_mass: "Peso corporal",
 };
 
-export function HealthOverview() {
+export function HealthOverview({ registered, onConfirmed }: { registered: Workout[]; onConfirmed: () => void }) {
   const [coverage, setCoverage] = useState<HealthCoverage[]>();
   const [source, setSource] = useState("");
   const [evaluation, setEvaluation] = useState<DurationEvaluation>();
@@ -54,12 +56,14 @@ export function HealthOverview() {
       )}
       {coverage?.every((item) => !item.last_batch) &&
         <p className="muted">Abre Compi en el iPhone y sincroniza las categorías que quieras compartir.</p>}
+      {coverage && <HealthTimeline coverage={coverage} />}
       {sources.length > 0 && <>
         <h3>Duración de las sesiones</h3>
         <label htmlFor="workout-source">Fuente de entrenamientos</label>
         <select id="workout-source" value={source} onChange={(event) => {
           setEvaluation(undefined); setEvaluationFailed(false); setSource(event.target.value);
         }}>{sources.map((name) => <option key={name}>{name}</option>)}</select>
+        <ImportedWorkouts key={source} source={source} registered={registered} onConfirmed={onConfirmed} />
         {evaluationFailed && <p role="alert">No se pudo evaluar esta fuente.</p>}
         {!evaluation && !evaluationFailed && <p>Cargando comparación…</p>}
         {evaluation && (evaluation.baseline && evaluation.by_activity ? <>

@@ -27,6 +27,8 @@ pnpm dev --hostname 127.0.0.1
 
 Abre [el panel](http://localhost:3000) y [Semana](http://localhost:3000/semana) en el computador. El panel necesita acceso al API en localhost. PostgreSQL se publica únicamente en la interfaz de loopback. Para salud personal usa cifrado de disco en el computador y copias protegidas bajo tu control.
 
+En **Historial diario**, selecciona una categoría, una fuente y un día. El pulso y el peso muestran puntos individuales; la tabla despliega las horas originales. Sueño y entrenamientos aparecen como intervalos, incluidos los que atraviesan la medianoche. La zona horaria del navegador aparece junto a las muestras. En **Entrenamientos importados → Registrar o vincular**, confirma si quieres crear un registro editable o asociar la muestra a una actividad existente. El registro de fuerza permite anotar el peso levantado, repeticiones y descanso por serie.
+
 ## Emparejar por Wi-Fi
 
 1. Determina el nombre Bonjour del Mac con `scutil --get LocalHostName` y añade `.local`. Usa siempre ese nombre para el mismo receptor.

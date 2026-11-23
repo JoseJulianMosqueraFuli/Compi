@@ -13,6 +13,7 @@ flowchart LR
     I -->|lote HTTPS por Wi-Fi| R[Receptor FastAPI]
     R --> O[(Observaciones y cursores)]
     O --> E[Evaluación temporal de duración]
+    O -->|selección confirmada en el panel| T
     E --> D[Panel local Next.js]
     D -->|horario, excepciones y series| B[API personal FastAPI]
     B --> T[(Sesiones y registros)]
@@ -31,6 +32,12 @@ Los dos servicios FastAPI comparten modelos, migraciones y base PostgreSQL. El r
 | Conservar procedencia | El identificador de la aplicación que escribió la muestra permite seleccionar una fuente. Muestras parecidas de dos apps pueden describir un solo evento. | La evaluación utiliza exclusivamente la fuente seleccionada. No se suman sensores ni se deduce el dispositivo físico a partir del bundle. |
 | Semanas editables y registro por serie | Una predicción necesita restricciones reales de tiempo y un resultado con el que compararse. | Cambiar una franja y revisar las sesiones pendientes, el motivo del cambio y el historial de las completadas. |
 | Comparar contra una referencia sencilla | Con pocos datos personales es fácil confundir la memorización con una mejora. | Evaluar ambas alternativas en las mismas fechas y consultar los minutos de error y las subestimaciones. |
+
+### Series de tiempo y observaciones
+
+La frecuencia cardiaca y el peso se consultan como series temporales irregulares por fuente. La línea de tiempo del panel usa la hora de la medición y conserva cada punto observado. Sueño y entrenamiento se consultan por solape con el día elegido y conservan los extremos originales, incluso cuando cruzan la medianoche. El selector usa la zona local visible del navegador y la API recibe límites con zona. La disponibilidad semanal conserva por separado la zona horaria configurada para entrenar.
+
+PostgreSQL conserva los tiempos en UTC y un índice por categoría e inicio. En un dispositivo compartiendo una única historia, este esquema permite consultar una ventana y contrastar el resultado directamente con Salud. Para evaluar otras bases o particiones mediríamos volumen, latencia de lectura por día y coste de almacenamiento. La hora de recepción del último lote sirve para vigilar la sincronización. Los intervalos sin datos siguen siendo huecos.
 
 ### Qué se guarda
 
@@ -60,7 +67,7 @@ Los datos personales, copias y artefactos autorizados tienen políticas de reten
 ## Evolución y criterios de aceptación
 
 1. **Validación física.** Emparejar el iPhone, probar permisos parciales, histórico inicial, pérdida de Wi-Fi, reenvío, corrección, borrado y restauración en una base aparte. Conservar solo el resultado de la prueba en documentación compartida.
-2. **Conciliación personal.** Asociar explícitamente la misma actividad entre apps y sesiones registradas, conservar los cambios manuales y comunicar la procedencia de los datos usados.
+2. **Validación de la conciliación.** En el panel, dos muestras que la persona identifica como la misma actividad pueden vincularse al mismo entrenamiento editable. El registro confirmado conserva su fecha, duración y series si la fuente cambia. Probar esta decisión con las apps concretas del iPhone antes de plantear sugerencias automáticas de coincidencias.
 3. **MLOps.** Revisar resultados por actividad, sesgo hacia sesiones interrumpidas y tamaño de muestra. Definir el período de evaluación antes de elegir un candidato. Versionar artefacto, dependencias y conjunto autorizado. Registrar aceptación o rechazo y mantener una versión anterior recuperable.
 4. **Plataforma.** Comparar colector OpenTelemetry con CloudWatch/X-Ray y un laboratorio Prometheus/Grafana sobre la misma carga. Infraestructura, publicación de la aplicación y promoción de modelos se aprueban por separado. Kubernetes es un ensayo posterior cuando exista una pregunta de orquestación, coste o recuperación. Bedrock se evaluará si se necesita explicar una decisión con lenguaje natural; la evidencia y los permisos siguen en la aplicación.
 5. **Más personas.** Antes de aceptar una segunda cuenta, implementar identidad y aislamiento por usuario, consentimientos por finalidad, borrado de copias y derivados, evaluación entre usuarios y pruebas de autorización. La instalación personal usa una única identidad local.

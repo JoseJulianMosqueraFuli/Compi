@@ -77,11 +77,26 @@ export interface MetricsResponse {
 
 export type HealthKind = "workout" | "heart_rate" | "sleep" | "body_mass";
 
+export interface ImportedWorkout {
+  sample_id: string;
+  source_bundle: string;
+  start: string;
+  end: string;
+  activity: "strength" | "walk" | "run" | "other";
+  workout_id: number | null;
+}
+
 export interface HealthCoverage {
   kind: HealthKind;
   samples: number;
   sources: string[];
+  latest_by_source: Record<string, string>;
   last_batch: string | null;
+}
+
+export interface TimelinePage {
+  samples: { sample_id: string; start: string; end: string; value: number | string }[];
+  has_more: boolean;
 }
 
 export interface DurationEvaluation {

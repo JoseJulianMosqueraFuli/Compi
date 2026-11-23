@@ -1,5 +1,6 @@
 """Pydantic request/response schemas for the API routers."""
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -49,6 +50,7 @@ class HRZoneOut(BaseModel):
 
 class HRZonesOut(BaseModel):
     hr_max_bpm: int
+    time_method: Literal["uniform_estimate"] = "uniform_estimate"
     zones: list[HRZoneOut]
 
 

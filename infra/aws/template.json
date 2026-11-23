@@ -1,0 +1,115 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Single-run Compi duration experiment on Linux Fargate using synthetic data, an existing private ECR image and an existing IPv4 subnet. Start the task explicitly with ECS RunTask.",
+  "Parameters": {
+    "VpcId": {"Type": "AWS::EC2::VPC::Id"},
+    "SubnetId": {"Type": "AWS::EC2::Subnet::Id"},
+    "RepositoryName": {
+      "Type": "String",
+      "MinLength": 2,
+      "MaxLength": 256,
+      "AllowedPattern": "[a-z0-9]+([._/-][a-z0-9]+)*",
+      "Description": "Existing private ECR repository in the same account and Region."
+    },
+    "ImageDigest": {
+      "Type": "String",
+      "AllowedPattern": "sha256:[0-9a-f]{64}",
+      "Description": "Published digest of the Compi backend image for linux/amd64."
+    }
+  },
+  "Rules": {
+    "SubnetBelongsToVpc": {
+      "Assertions": [{
+        "Assert": {"Fn::EachMemberIn": [{"Fn::ValueOfAll": ["AWS::EC2::Subnet::Id", "VpcId"]}, {"Fn::RefAll": "AWS::EC2::VPC::Id"}]},
+        "AssertDescription": "Select a subnet belonging to the supplied VPC."
+      }]
+    }
+  },
+  "Resources": {
+    "LabCluster": {
+      "Type": "AWS::ECS::Cluster",
+      "Metadata": {"com.aws.cloudformation.Context": {"why": "Isolate manually launched experiments from existing services."}},
+      "Properties": {"ClusterSettings": [{"Name": "containerInsights", "Value": "disabled"}]}
+    },
+    "ExperimentLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Delete",
+      "UpdateReplacePolicy": "Delete",
+      "Metadata": {"com.aws.cloudformation.Context": {"why": "The report contains synthetic aggregate evaluation results.", "must": ["Delete temporary logs with the stack."]}},
+      "Properties": {"RetentionInDays": 3}
+    },
+    "TaskNetwork": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Metadata": {"com.aws.cloudformation.Context": {"why": "The job only needs outbound HTTPS for ECR and logs.", "must": ["Keep inbound access disabled."]}},
+      "Properties": {
+        "GroupDescription": "Outbound HTTPS for the Compi synthetic task",
+        "VpcId": {"Ref": "VpcId"},
+        "SecurityGroupEgress": [
+          {"Description": "ECR image pull and CloudWatch Logs over TLS", "IpProtocol": "tcp", "FromPort": 443, "ToPort": 443, "CidrIp": "0.0.0.0/0"}
+        ]
+      }
+    },
+    "ExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Metadata": {"com.aws.cloudformation.Context": {"why": "Fargate pulls the specific backend image and writes the lab output.", "must": ["Keep this role separate from application code."]}},
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow", "Action": "sts:AssumeRole", "Principal": {"Service": "ecs-tasks.amazonaws.com"},
+            "Condition": {
+              "StringEquals": {"aws:SourceAccount": {"Ref": "AWS::AccountId"}},
+              "ArnLike": {"aws:SourceArn": {"Fn::Sub": "arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*"}}
+            }
+          }]
+        },
+        "Policies": [{
+          "PolicyName": "PullImageAndWriteReport",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {"Effect": "Allow", "Action": "ecr:GetAuthorizationToken", "Resource": "*"},
+              {
+                "Effect": "Allow", "Action": ["ecr:BatchCheckLayerAvailability", "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
+                "Resource": {"Fn::Sub": "arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${RepositoryName}"}
+              },
+              {
+                "Effect": "Allow", "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                "Resource": {"Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ExperimentLogs}:log-stream:synthetic/experiment/*"}
+              }
+            ]
+          }
+        }]
+      }
+    },
+    "Experiment": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Metadata": {"com.aws.cloudformation.Context": {"why": "Evaluate the baseline and candidate once using the same CLI as local development.", "must": ["Use only synthetic input and immutable images.", "Keep application credentials, volumes and inbound ports absent."]}},
+      "Properties": {
+        "RequiresCompatibilities": ["FARGATE"],
+        "RuntimePlatform": {"OperatingSystemFamily": "LINUX", "CpuArchitecture": "X86_64"},
+        "NetworkMode": "awsvpc",
+        "Cpu": "256", "Memory": "512",
+        "ExecutionRoleArn": {"Fn::GetAtt": ["ExecutionRole", "Arn"]},
+        "ContainerDefinitions": [{
+          "Name": "experiment", "Essential": true,
+          "Image": {"Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/${RepositoryName}@${ImageDigest}"},
+          "Command": ["python", "-m", "app.experiment", "--synthetic"],
+          "User": "65534:65534", "ReadonlyRootFilesystem": true,
+          "LogConfiguration": {
+            "LogDriver": "awslogs",
+            "Options": {"awslogs-group": {"Ref": "ExperimentLogs"}, "awslogs-region": {"Ref": "AWS::Region"}, "awslogs-stream-prefix": "synthetic", "mode": "blocking"}
+          }
+        }]
+      }
+    }
+  },
+  "Outputs": {
+    "Cluster": {"Value": {"Fn::GetAtt": ["LabCluster", "Arn"]}},
+    "Definition": {"Value": {"Ref": "Experiment"}},
+    "LogGroup": {"Value": {"Ref": "ExperimentLogs"}},
+    "Network": {
+      "Value": {"Fn::Sub": "awsvpcConfiguration={subnets=[${SubnetId}],securityGroups=[${TaskNetwork.GroupId}],assignPublicIp=DISABLED}"}
+    }
+  }
+}

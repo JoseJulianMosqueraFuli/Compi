@@ -15,6 +15,7 @@ from app.models.domain import (
     WorkoutType,
 )
 from app.models.health import HealthObservation, HealthSyncCursor
+from app.models.health_workout import HealthWorkoutLink
 from app.models.periodization import (
     Macrociclo,
     Mesociclo,
@@ -49,6 +50,7 @@ __all__ = [
     "HRZone",
     "HealthObservation",
     "HealthSyncCursor",
+    "HealthWorkoutLink",
     "Macrociclo",
     "Mesociclo",
     "Microciclo",

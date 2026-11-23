@@ -161,3 +161,42 @@ def test_retiring_one_stream_preserves_the_other_categories(clients):
     rows = {row["kind"]: row for row in desktop.get("/api/healthkit/coverage").json()}
     assert rows["heart_rate"]["last_batch"] is None and rows["heart_rate"]["samples"] == 0
     assert rows["body_mass"]["last_batch"] and rows["body_mass"]["samples"] == 1
+
+
+def test_timeline_uses_measurement_times_half_open_days_and_one_source(clients):
+    phone, desktop = clients
+    origin = "com.example.watch"
+    source_day = "2026-01-03"
+
+    def sample(hour, value, source=origin, end=None):
+        start = f"{source_day}T{hour}:00:00-05:00"
+        return dict(sample_id=str(uuid4()), source_bundle=source, start=start, end=end or start, value=value)
+
+    points = [sample("08", 65), sample("14", 74), sample("12", 90, "com.example.other")]
+    for kind, rows in (
+        ("heart_rate", points),
+        ("sleep", [sample("23", "deep", end="2026-01-04T02:00:00-05:00")]),
+    ):
+        body = dict(kind=kind, stream_id=str(uuid4()), sequence=1, upserts=rows, deletions=[])
+        assert phone.post(ENDPOINT, json=body).status_code == 200
+    query = dict(
+        kind="heart_rate", source=origin, start="2026-01-03T08:00:00-05:00", end="2026-01-03T14:00:00-05:00"
+    )
+    data = desktop.post("/api/healthkit/timeline", json=query).json()
+    assert [r["value"] for r in data["samples"]] == [65] and not data["has_more"]
+    query.update(kind="sleep", start="2026-01-04T00:00:00-05:00", end="2026-01-05T00:00:00-05:00")
+    sleep = desktop.post("/api/healthkit/timeline", json=query).json()["samples"]
+    assert [r["value"] for r in sleep] == ["deep"]
+    assert sleep[0]["start"] == "2026-01-04T04:00:00Z"
+    assert sleep[0]["end"] == "2026-01-04T07:00:00Z"
+    assert phone.post("/api/healthkit/timeline", json=query).status_code == 404
+
+
+def test_empty_dashboard_keeps_unmeasured_totals_unknown(clients):
+    _, desktop = clients
+    assert desktop.get("/api/metrics/activity-totals").json() == {
+        "strength_kg": None,
+        "cardio_minutes": None,
+        "estimated_load": None,
+        "sessions_with_avg_hr": 0,
+    }

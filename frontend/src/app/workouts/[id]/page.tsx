@@ -48,13 +48,13 @@ function CardioView({ workout, metrics }: { workout: Workout; metrics: HRZonesRe
         {workout.calories && <p>Calorías: {workout.calories}</p>}
       </div>
       <h2>Zonas de FC</h2>
-      <p className="muted small">hr_max = {metrics.hr_max_bpm} bpm</p>
+      <p className="muted small">Rangos calculados con una FC máxima de referencia de {metrics.hr_max_bpm} bpm.
+        El tiempo en cada zona requiere muestras de pulso vinculadas a esta sesión.</p>
       <table>
         <thead>
           <tr>
             <th>Zona</th>
             <th>Rango</th>
-            <th>Tiempo</th>
           </tr>
         </thead>
         <tbody>
@@ -64,7 +64,6 @@ function CardioView({ workout, metrics }: { workout: Workout; metrics: HRZonesRe
               <td>
                 {z.lower_bpm}–{z.upper_bpm} bpm
               </td>
-              <td>{Math.round(z.seconds_in_zone / 60)} min</td>
             </tr>
           ))}
         </tbody>

@@ -30,6 +30,10 @@ main {
 }
 
 .card table + h3 { margin-top: 1.5rem; }
+.health-imports { margin: 1rem 0; }
+.health-imports summary { cursor: pointer; }
+.import-row { padding: 0.75rem 0; border-bottom: 1px solid var(--bg-elevated); }
+.import-row button, .import-row fieldset { margin-top: 0.5rem; }
 
 h1, h2, h3 { margin-top: 0; }
 

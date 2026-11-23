@@ -5,6 +5,9 @@ import type {
   DurationEvaluation,
   ExerciseIn,
   HealthCoverage,
+  HealthKind,
+  ImportedWorkout,
+  TimelinePage,
   HRZonesResponse,
   Macrociclo,
   MetricsResponse,
@@ -57,6 +60,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   healthCoverage: () => request<HealthCoverage[]>("/api/healthkit/coverage"),
+  activityTotals: () => request<{
+    strength_kg: number | null; cardio_minutes: number | null; estimated_load: number | null; sessions_with_avg_hr: number
+  }>("/api/metrics/activity-totals"),
+  healthTimeline: (query: { kind: HealthKind; source: string; start: string; end: string; offset: number }) =>
+    request<TimelinePage>("/api/healthkit/timeline", { method: "POST", body: JSON.stringify(query) }),
+  importedWorkouts: (source: string) => request<ImportedWorkout[]>(
+    `/api/healthkit/workouts?${new URLSearchParams({ source, limit: "20" })}`,
+  ),
+  confirmWorkout: (id: string, existingId: number | null) => request<{ workout_id: number }>(
+    `/api/healthkit/workouts/${encodeURIComponent(id)}/confirm`,
+    { method: "POST", body: JSON.stringify({ workout_id: existingId }) },
+  ),
   evaluateDuration: (source: string) => request<DurationEvaluation>("/api/healthkit/duration-evaluation", {
     method: "POST", body: JSON.stringify({ source }),
   }),

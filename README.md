@@ -5,11 +5,11 @@ Compi reúne el historial autorizado del iPhone y del reloj Huawei, el registro 
 ## Usar Compi
 
 1. **Conecta el iPhone.** La app nativa lee desde Salud los entrenamientos, el sueño, la frecuencia cardiaca y el peso corporal que elijas compartir. En la misma Wi-Fi, envía los cambios a tu computador por HTTPS. [Instalación local](docs/operacion-local.md) · [App SwiftUI](ios/README.md).
-2. **Comprueba qué llegó.** En la portada aparecen la cantidad de muestras y el último lote por categoría. Selecciona una fuente de entrenamientos para comparar dos estimaciones de duración sobre su historial.
+2. **Comprueba qué llegó.** En la portada aparecen la cantidad de muestras y el último lote por categoría. Consulta la serie de pulso o peso por día y origen, o los intervalos de sueño y actividad. En **Entrenamientos importados**, puedes crear un registro editable o vincular la misma actividad a uno existente.
 3. **Organiza la semana.** En **Semana** edita tus franjas, el acceso al gimnasio, las excepciones y tus preferencias. Genera la semana para ver qué sesiones de fuerza, caminata y carrera caben y por qué. Las series se registran en el detalle de un entrenamiento.
 4. **Evalúa un cambio.** El experimento de duración se puede ejecutar con datos sintéticos o con una sola fuente local. Compara error en minutos y sesiones subestimadas. [Experimento y operación](docs/operacion-local.md#evaluar-la-duración) · [Decisiones de arquitectura y próximos hitos](docs/arquitectura.md).
 
-Las observaciones de Salud conservan su origen. Las sesiones registradas y los planes conservan las ediciones del usuario. La conciliación entre ambos historiales requiere confirmación y queda como siguiente hito. El experimento de duración ya consume el historial importado.
+Las observaciones de Salud conservan su origen. Las sesiones registradas y los planes conservan las ediciones del usuario. La conciliación entre ambos historiales requiere una confirmación en el panel. Si una fuente corrige o elimina la muestra original, el registro que confirmaste conserva sus datos y tus ediciones. El experimento de duración ya consume el historial importado.
 
 ## Componentes del proyecto
 
