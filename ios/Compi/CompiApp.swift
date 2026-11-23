@@ -9,13 +9,18 @@ struct CompiApp: App {
 
 @MainActor
 final class SyncModel: ObservableObject {
-    @Published var address = ""
-    @Published var tokenInput = ""
+    @Published var address = "" {
+        didSet { if address != oldValue { connectionMessage = "" } }
+    }
+    @Published var tokenInput = "" {
+        didSet { if tokenInput != oldValue { connectionMessage = "" } }
+    }
     @Published var selected: Set<SampleKind> {
         didSet { UserDefaults.standard.set(selected.map(\.rawValue), forKey: "enabledHealthCategories") }
     }
     @Published private(set) var connectedAddress: String?
     @Published private(set) var working = false
+    @Published private(set) var connectionMessage = ""
     @Published private(set) var message = ""
     @Published var resetKind: SampleKind?
 
@@ -39,9 +44,32 @@ final class SyncModel: ObservableObject {
             address = pairing.origin.absoluteString
             connectedAddress = address
             tokenInput = ""
-            message = "Conexión guardada. Puedes iniciar la sincronización."
+            connectionMessage = "Conexión guardada. Puedes probar el receptor."
+            message = ""
         } catch {
-            message = (error as? SyncError ?? .credential).message
+            connectionMessage = (error as? SyncError ?? .credential).message
+        }
+    }
+
+    var canUseConnection: Bool {
+        connectedAddress != nil && address == connectedAddress && tokenInput.isEmpty
+    }
+
+    func checkConnection() async {
+        guard !working, canUseConnection else { return }
+        working = true
+        connectionMessage = "Comprobando el receptor…"
+        defer { working = false }
+        do {
+            guard let pairing = try Keychain.load() else { throw SyncError.credential }
+            try await transport.checkConnection(to: pairing)
+            connectionMessage = "Conexión verificada. El receptor está listo para sincronizar."
+        } catch let error as SyncError {
+            connectionMessage = error.message
+        } catch let error as URLError {
+            connectionMessage = SyncError(transportError: error).message
+        } catch {
+            connectionMessage = SyncError.credential.message
         }
     }
 
@@ -64,7 +92,7 @@ final class SyncModel: ObservableObject {
     }
 
     func synchronize() async {
-        guard !working, !selected.isEmpty, tokenInput.isEmpty, address == connectedAddress else { return }
+        guard !working, !selected.isEmpty, canUseConnection else { return }
         working = true
         message = "Consultando Salud…"
         defer { working = false }
@@ -115,8 +143,8 @@ final class SyncModel: ObservableObject {
             }
         } catch let error as SyncError {
             message = error.message
-        } catch is URLError {
-            message = SyncError.serverUnavailable.message
+        } catch let error as URLError {
+            message = SyncError(transportError: error).message
         } catch {
             message = "Sincronización interrumpida. Desbloquea el iPhone, revisa los permisos y vuelve a intentarlo."
         }
@@ -138,6 +166,9 @@ private struct SyncView: View {
                     SecureField("Token de conexión", text: $model.tokenInput)
                     Button("Guardar conexión") { model.saveConnection() }
                         .disabled(model.address.isEmpty || model.tokenInput.isEmpty)
+                    Button("Probar conexión") { Task { await model.checkConnection() } }
+                        .disabled(!model.canUseConnection)
+                    if !model.connectionMessage.isEmpty { Text(model.connectionMessage).font(.footnote) }
                 }
                 Section {
                     ForEach(SampleKind.allCases, id: \.self) { kind in
@@ -154,7 +185,7 @@ private struct SyncView: View {
                 }
                 Section {
                     Button("Sincronizar ahora") { Task { await model.synchronize() } }
-                        .disabled(model.selected.isEmpty || model.connectedAddress != model.address || !model.tokenInput.isEmpty)
+                        .disabled(model.selected.isEmpty || !model.canUseConnection)
                     if model.working { ProgressView() }
                     if !model.message.isEmpty { Text(model.message).font(.footnote) }
                 }

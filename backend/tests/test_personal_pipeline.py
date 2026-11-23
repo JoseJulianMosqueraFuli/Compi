@@ -15,10 +15,12 @@ from app.config import Settings
 from app.db import get_session
 from app.experiment import dataset_digest, track
 from app.main import create_app
+from app.models.health import HealthObservation, HealthSyncCursor
 from app.reset_healthkit import clear_category
 from app.services.duration_experiment import RecordedSession, evaluate_sessions
 
 ENDPOINT = "/api/healthkit/batches"
+CONNECTION = "/api/healthkit/connection"
 
 
 @pytest.fixture
@@ -46,7 +48,7 @@ def clients(tmp_path, monkeypatch):
     engine.dispose()
 
 
-def test_gateway_is_write_only_paired_and_validates_privately(clients, monkeypatch):
+def test_gateway_limits_routes_and_validates_privately(clients, monkeypatch):
     phone, desktop = clients
     assert phone.get("/api/workouts").status_code == 404
     assert phone.get("/openapi.json").status_code == 404
@@ -57,6 +59,65 @@ def test_gateway_is_write_only_paired_and_validates_privately(clients, monkeypat
     assert invalid.status_code == 422 and "private-marker" not in invalid.text
     monkeypatch.setattr(mobile, "get_settings", lambda: Settings(healthkit_sync_token=""))
     assert phone.post(ENDPOINT, json={}).status_code == 503
+
+
+def test_pairing_probe_is_independent_of_health_data(clients):
+    phone, desktop = clients
+    for _ in range(2):
+        response = phone.get(CONNECTION)
+        assert response.status_code == 200
+        assert response.json() == {"status": "ready", "protocol_version": 1}
+        assert response.headers["cache-control"] == "no-store"
+    rows = desktop.get("/api/healthkit/coverage").json()
+    assert all(row["samples"] == 0 and row["last_batch"] is None for row in rows)
+    assert desktop.get(CONNECTION).status_code == 404
+    assert phone.post(CONNECTION, json={}).status_code == 404
+    assert phone.get(ENDPOINT).status_code == 404
+
+
+def test_probe_checks_transport_and_pairing_before_opening_storage(clients, monkeypatch):
+    phone, _ = clients
+
+    def unexpected_session():
+        pytest.fail("rejected probes must not open a session")
+
+    monkeypatch.setitem(mobile.app.dependency_overrides, get_session, unexpected_session)
+    assert phone.get("http://compi.local" + CONNECTION).status_code == 403
+    assert phone.get(CONNECTION, headers={"Authorization": ""}).status_code == 401
+    assert phone.get(CONNECTION, headers={"Authorization": "Bearer incorrect"}).status_code == 401
+    monkeypatch.setattr(mobile, "get_settings", lambda: Settings(healthkit_sync_token=""))
+    response = phone.get(CONNECTION)
+    assert response.status_code == 503 and response.headers["cache-control"] == "no-store"
+
+
+@pytest.mark.parametrize("available_model", [HealthSyncCursor, HealthObservation])
+def test_probe_requires_both_ingestion_tables(clients, monkeypatch, tmp_path, available_model):
+    phone, _ = clients
+    partial_engine = create_engine(f"sqlite:///{tmp_path / 'partial_schema.db'}")
+    available_model.__table__.create(partial_engine)
+
+    def partial_schema():
+        with Session(partial_engine) as session:
+            yield session
+
+    monkeypatch.setitem(mobile.app.dependency_overrides, get_session, partial_schema)
+    try:
+        response = phone.get(CONNECTION)
+        assert response.status_code == 503 and response.json() == {"detail": "storage unavailable"}
+    finally:
+        partial_engine.dispose()
+
+
+def test_probe_sanitizes_storage_errors(clients, monkeypatch):
+    phone, _ = clients
+
+    def unavailable_session():
+        raise OperationalError("private detail", {}, Exception())
+
+    monkeypatch.setitem(mobile.app.dependency_overrides, get_session, unavailable_session)
+    response = phone.get(CONNECTION)
+    assert response.status_code == 503 and response.json() == {"detail": "storage unavailable"}
+    assert response.headers["cache-control"] == "no-store"
 
 
 def test_import_replay_and_delete_update_dashboard_and_experiment(clients):

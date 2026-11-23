@@ -93,11 +93,20 @@ private final class NoRedirects: NSObject, URLSessionTaskDelegate {
     }
 }
 
+private struct ReceiverStatus: Decodable {
+    let status: String
+    let protocolVersion: Int
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case protocolVersion = "protocol_version"
+    }
+}
+
 final class BatchTransport {
     private let session: URLSession
 
-    init() {
-        let config = URLSessionConfiguration.ephemeral
+    init(config: URLSessionConfiguration = .ephemeral) {
         config.allowsCellularAccess = false
         config.waitsForConnectivity = false
         config.urlCache = nil
@@ -109,13 +118,35 @@ final class BatchTransport {
 
     deinit { session.invalidateAndCancel() }
 
-    func send(_ batch: PendingBatch, to pairing: Pairing) async throws -> Acknowledgement {
+    private func request(_ path: String, to pairing: Pairing) throws -> URLRequest {
         let origin = try LocalServer.origin(pairing.origin.absoluteString)
-        var request = URLRequest(url: origin.appendingPathComponent("api/healthkit/batches"))
+        var request = URLRequest(url: origin.appendingPathComponent(path))
+        request.setValue("Bearer \(pairing.token)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+
+    func checkConnection(to pairing: Pairing) async throws {
+        var request = try request("api/healthkit/connection", to: pairing)
+        request.httpMethod = "GET"
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse else { throw SyncError.incompatibleReceiver }
+        switch response.statusCode {
+        case 200:
+            guard let receiver = try? JSONDecoder().decode(ReceiverStatus.self, from: data),
+                  receiver.protocolVersion == 1 else { throw SyncError.incompatibleReceiver }
+            guard receiver.status == "ready" else { throw SyncError.receiverNotReady }
+        case 401, 403: throw SyncError.unauthorized
+        case 503: throw SyncError.receiverNotReady
+        case 300..<400, 404, 405: throw SyncError.incompatibleReceiver
+        default: throw SyncError.serverUnavailable
+        }
+    }
+
+    func send(_ batch: PendingBatch, to pairing: Pairing) async throws -> Acknowledgement {
+        var request = try request("api/healthkit/batches", to: pairing)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(String(batch.body.count), forHTTPHeaderField: "Content-Length")
-        request.setValue("Bearer \(pairing.token)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await session.upload(for: request, from: batch.body)
         switch (response as? HTTPURLResponse)?.statusCode {
         case 200:

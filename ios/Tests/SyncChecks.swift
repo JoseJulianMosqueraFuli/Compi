@@ -1,11 +1,48 @@
 import Foundation
 
+// Intercept all requests. Only this read-only contract may reach the synthetic receiver.
+private final class ReceiverFixture: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func stopLoading() {}
+
+    override func startLoading() {
+        guard let url = request.url, let host = url.host else { preconditionFailure("Missing target") }
+        precondition(url.scheme == "https" && url.path == "/api/healthkit/connection" && url.query == nil)
+        precondition(request.httpMethod == "GET" && request.httpBody == nil && request.httpBodyStream == nil)
+        precondition(request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-fixture")
+
+        let status: Int
+        let body: String
+        switch host {
+        case "ready.local": (status, body) = (200, #"{"status":"ready","protocol_version":1}"#)
+        case "old.local": (status, body) = (200, #"{"status":"ready","protocol_version":2}"#)
+        case "malformed.local": (status, body) = (200, "{}")
+        case "waiting.local": (status, body) = (200, #"{"status":"waiting","protocol_version":1}"#)
+        case "auth.local": (status, body) = (401, "")
+        case "missing.local": (status, body) = (404, "")
+        case "redirect.local": (status, body) = (307, "")
+        case "db.local": (status, body) = (503, "")
+        case "failure.local": (status, body) = (500, "")
+        case "tls.local", "offline.local":
+            let code: URLError.Code = host == "tls.local" ? .serverCertificateUntrusted : .cannotConnectToHost
+            client?.urlProtocol(self, didFailWithError: URLError(code))
+            return
+        default: preconditionFailure("Unexpected destination")
+        }
+        let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+}
+
 @main
 struct SyncChecks {
-    static func main() throws {
+    static func main() async throws {
         try endpointRestrictions()
-        try offlineReplay()
-        print("Compi · destinos locales y reintentos verificados")
+        try await offlineReplay()
+        print("Compi · conexión autenticada, destinos locales y reintentos verificados")
     }
 
     private static func endpointRestrictions() throws {
@@ -24,7 +61,33 @@ struct SyncChecks {
         }
     }
 
-    private static func offlineReplay() throws {
+    private static func checkReceiver() async throws {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [ReceiverFixture.self]
+        let transport = BatchTransport(config: config)
+        func pairing(_ host: String) throws -> Pairing {
+            Pairing(origin: try LocalServer.origin("https://\(host).local"), token: "synthetic-fixture")
+        }
+        try await transport.checkConnection(to: pairing("ready"))
+        let failures: [(String, SyncError)] = [
+            ("old", .incompatibleReceiver), ("malformed", .incompatibleReceiver),
+            ("waiting", .receiverNotReady), ("auth", .unauthorized), ("missing", .incompatibleReceiver),
+            ("redirect", .incompatibleReceiver), ("db", .receiverNotReady), ("failure", .serverUnavailable),
+            ("tls", .tls), ("offline", .network)
+        ]
+        for (host, expected) in failures {
+            do {
+                try await transport.checkConnection(to: pairing(host))
+                preconditionFailure("Unexpected success for \(host)")
+            } catch let error as SyncError {
+                precondition(error == expected, "Unexpected receiver error for \(host)")
+            } catch let error as URLError {
+                precondition(SyncError(transportError: error) == expected, "Unexpected network error for \(host)")
+            }
+        }
+    }
+
+    private static func offlineReplay() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
         let store = try StateFiles(directory: directory)
@@ -36,6 +99,11 @@ struct SyncChecks {
         let first = Changes(anchor: Data([1]), samples: [sample], deletions: [])
         try stream.stage(first, kind: kind)
         try store.save(stream, kind)
+        let stateFile = directory.appendingPathComponent(kind.rawValue)
+        let bytesBeforeChecks = try Data(contentsOf: stateFile)
+        try await checkReceiver()
+        let bytesAfterChecks = try Data(contentsOf: stateFile)
+        precondition(bytesBeforeChecks == bytesAfterChecks)
         let staged = try store.load(kind)
         precondition(staged.sequence == 0 && staged.anchor == nil && staged.streamID == stream.streamID)
         let body = try JSONSerialization.jsonObject(with: staged.pending!.body) as! [String: Any]

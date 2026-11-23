@@ -68,7 +68,18 @@ struct Acknowledgement: Decodable {
 
 enum SyncError: Error {
     case endpoint, credential, healthUnavailable, unreadableSample, acknowledgement, conflict
-    case unauthorized, invalidBatch, serverUnavailable
+    case unauthorized, invalidBatch, serverUnavailable, incompatibleReceiver, receiverNotReady, tls, network
+
+    init(transportError: URLError) {
+        switch transportError.code {
+        case .secureConnectionFailed, .serverCertificateHasBadDate, .serverCertificateUntrusted,
+             .serverCertificateHasUnknownRoot, .serverCertificateNotYetValid, .clientCertificateRejected,
+             .clientCertificateRequired, .appTransportSecurityRequiresSecureConnection:
+            self = .tls
+        default:
+            self = .network
+        }
+    }
 
     var message: String {
         switch self {
@@ -80,7 +91,11 @@ enum SyncError: Error {
         case .conflict: return "La secuencia difiere en el servidor. Comprueba el destino y su copia de la base de datos."
         case .unauthorized: return "El servidor rechazó el token. Revisa la conexión guardada."
         case .invalidBatch: return "El servidor rechazó el formato del lote. Comprueba la versión de Compi."
-        case .serverUnavailable: return "No se pudo confirmar el envío. Revisa la red local, HTTPS y el servidor."
+        case .serverUnavailable: return "El receptor no pudo completar la solicitud. Comprueba su estado en el Mac e inténtalo de nuevo."
+        case .incompatibleReceiver: return "Comprueba la dirección y el puerto del receptor móvil y que ambas versiones de Compi sean compatibles."
+        case .receiverNotReady: return "Comprueba en el Mac el token del receptor, la conexión a la base de datos y las migraciones."
+        case .tls: return "Falló la conexión segura. Verifica el nombre y la vigencia del certificado del Mac y la confianza en su autoridad local en el iPhone."
+        case .network: return "Comprueba que ambos equipos estén en la misma Wi-Fi, el permiso de red local y que el receptor esté encendido."
         }
     }
 }

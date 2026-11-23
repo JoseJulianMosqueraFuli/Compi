@@ -34,6 +34,9 @@ def test_postgres_healthkit_ingestion_and_coverage(monkeypatch):
             TestClient(mobile.app, base_url="https://compi.test") as phone,
             TestClient(create_app(), base_url="http://localhost") as desk,
         ):
+            assert phone.get("/api/healthkit/connection", headers=headers).json() == {
+                "status": "ready", "protocol_version": 1,
+            }
             assert phone.post("/api/healthkit/batches", json=page, headers=headers).json() == {
                 "sequence": 1, "applied": True,
             }
