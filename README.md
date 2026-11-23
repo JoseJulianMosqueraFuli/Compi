@@ -1,8 +1,17 @@
-# Compi - Training Platform
+# Compi
 
-Plataforma personal de entrenamiento que sincroniza entrenamientos desde Huawei Health Kit, los persiste, calcula métricas, permite planificar mediante periodización y recomienda cada semana qué entrenar y cuándo según tu disponibilidad.
+Compi reúne el historial autorizado del iPhone y del reloj Huawei, el registro de fuerza por serie y el tiempo disponible para entrenar. Es una plataforma personal de recomendaciones y un proyecto práctico de MLOps. La primera instalación vive en el iPhone y en el computador.
 
-## Estado del desarrollo
+## Usar Compi
+
+1. **Conecta el iPhone.** La app nativa lee desde Salud los entrenamientos, el sueño, la frecuencia cardiaca y el peso corporal que elijas compartir. En la misma Wi-Fi, envía los cambios a tu computador por HTTPS. [Instalación local](docs/operacion-local.md) · [App SwiftUI](ios/README.md).
+2. **Comprueba qué llegó.** En la portada aparecen la cantidad de muestras y el último lote por categoría. Selecciona una fuente de entrenamientos para comparar dos estimaciones de duración sobre su historial.
+3. **Organiza la semana.** En **Semana** edita tus franjas, el acceso al gimnasio, las excepciones y tus preferencias. Genera la semana para ver qué sesiones de fuerza, caminata y carrera caben y por qué. Las series se registran en el detalle de un entrenamiento.
+4. **Evalúa un cambio.** El experimento de duración se puede ejecutar con datos sintéticos o con una sola fuente local. Compara error en minutos y sesiones subestimadas. [Experimento y operación](docs/operacion-local.md#evaluar-la-duración) · [Decisiones de arquitectura y próximos hitos](docs/arquitectura.md).
+
+Las observaciones de Salud conservan su origen. Las sesiones registradas y los planes conservan las ediciones del usuario. La conciliación entre ambos historiales requiere confirmación y queda como siguiente hito. El experimento de duración ya consume el historial importado.
+
+## Componentes del proyecto
 
 | Bloque | Tasks | Estado |
 |--------|-------|--------|
@@ -15,22 +24,23 @@ Plataforma personal de entrenamiento que sincroniza entrenamientos desde Huawei 
 | 7. Métricas | 8.1 – 8.6 | ✅ compute_hr_zones, workout_volume, workout_training_load + PBT (Property 4, 5, 6) |
 | 8. Periodización y progresión | 9.1 – 9.6 | ✅ PlanService con invariantes temporales, compute_progression, compare_planned_vs_actual + PBT (Property 2, 7, 8) |
 | 9. API REST | 11.1 – 11.5 + 13.1 | ✅ routers workouts/metrics/plans, main.py con lifespan, scheduler, CORS, health, PBT (Property 12) |
-| 10. Integración Huawei OAuth | 12.1 – 12.3 | ✅ HuaweiProvider real con OAuth, refresh y mapeo de respuesta; router auth con /login y /callback |
+| 10. Integración Huawei OAuth | 12.1 – 12.3 | Conector directo opcional con OAuth y renovación. Validado con respuestas simuladas; acceso real pendiente. |
 | 11. Wiring backend (main.py) | 13.1 | ✅ App FastAPI con lifespan, scheduler, CORS, health, handlers 404/409 |
 | 12. Frontend PWA | 15.1 – 15.5 | ✅ Next.js 15 + App Router, PWA instalable, dashboard, vista cardio/fuerza/plan, cliente API tipado |
-| 13. Despliegue | 16.1 – 16.2 | ✅ Dockerfile del backend, build estático del frontend (Next.js) |
+| 13. Despliegue | 16.1 – 16.2 | Dockerfile del backend y build Next.js para el panel local |
 | 14. Registro de fuerza por serie | 18.1 | ✅ `WorkoutExercise` + `ExerciseSet` reemplazan a `StrengthDetail`; `PUT /api/workouts/{id}/exercises` |
 | 15. Recomendador semanal (backend) | 18.2 – 18.4 | ✅ Disponibilidad, preferencias, semana recomendada, recálculo, registro y evaluación |
 | 16. Migración del recomendador | 18.5 | ✅ `bf03fa6b4c07`: tablas nuevas, datos de `strength_detail` migrados, timestamps a `timestamptz` |
 | 17. Tests del recomendador | 18.6 | ✅ Funciones puras (unitarias + PBT) y API de punta a punta |
-| 18. Frontend del recomendador | 18.7 – 18.8 | 🟡 Cliente API y formulario de fuerza por serie listos; faltan las vistas de disponibilidad, preferencias y semana |
-
-Tests backend: **139 / 139 pasan** · Lint backend: limpio · Frontend: typecheck + lint + build OK.
+| 18. Frontend del recomendador | 18.7 – 18.8 | Disponible en `/semana`: franjas, excepciones, preferencias, semana y motivos. Registro por serie en el detalle del entrenamiento. |
+| 19. Ingestión personal | Req. 12 | App iOS, receptor HTTPS independiente, procedencia, correcciones y borrados transaccionales |
+| 20. Evaluación y operaciones | Req. 13 | Comparación temporal de duraciones por fuente, tracking local opcional en MLflow, OpenTelemetry y CI por componente |
 
 ## Estructura del repositorio
 
 ```
 compi/
+├── ios/                           # SwiftUI, HealthKit y estado de sincronización protegido
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                 # Inicializacion FastAPI, lifespan, scheduler, CORS
@@ -121,12 +131,15 @@ docker compose up -d db
 alembic upgrade head
 
 # Arrancar API
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 127.0.0.1 --no-access-log --reload
 ```
 
 Endpoints principales:
 
-- `GET /health` — health check
+- `GET /health` — proceso vivo
+- `GET /ready` — comprueba la conexión a la base
+- `GET /api/healthkit/coverage` — cobertura, procedencia y última recepción
+- `POST /api/healthkit/duration-evaluation` — evaluación retrospectiva por fuente
 - `GET /api/workouts` — lista workouts
 - `GET /api/workouts/{id}` — detalle (404 si no existe)
 - `PUT /api/workouts/{id}/exercises` — registro de fuerza serie a serie; reemplaza el registro anterior (Req 3.5)
@@ -158,7 +171,8 @@ Editar la disponibilidad recalcula las sesiones pendientes de las semanas abiert
 Variables de entorno (ver `backend/.env.example`):
 
 - `DATABASE_URL` — URL de conexión a PostgreSQL
-- `HUAWEI_CLIENT_ID`, `HUAWEI_CLIENT_SECRET`, `HUAWEI_REDIRECT_URI` — opcionales; sin ellas se usa `MockProvider` (Req 1.4)
+- `HEALTHKIT_SYNC_TOKEN` — secreto local compartido con el iPhone para el receptor HTTPS
+- `LEGACY_SYNC_MODE` — `off` por defecto. `demo` es para una base sintética independiente. `huawei` requiere OAuth y credenciales `HUAWEI_*`
 - `SYNC_INTERVAL_MINUTES` — periodicidad de la sincronización (por defecto 60)
 - `CORS_ALLOWED_ORIGINS` — lista JSON de orígenes permitidos
 
@@ -220,7 +234,7 @@ cd frontend
 corepack enable              # si pnpm no está instalado
 pnpm install
 cp .env.example .env.local   # ajustar NEXT_PUBLIC_API_URL
-pnpm dev                     # http://localhost:3000
+pnpm dev --hostname 127.0.0.1 # http://localhost:3000
 ```
 
 Scripts disponibles (`pnpm <script>`): `dev`, `build`, `start`, `lint`, `typecheck`.
@@ -232,11 +246,12 @@ Scripts disponibles (`pnpm <script>`): `dev`, `build`, `start`, `lint`, `typeche
 
 Vistas implementadas:
 
-- `/` — Dashboard con métricas agregadas y últimos workouts
+- `/` — Panel con cobertura de Salud y comparación de duración por fuente, además de entrenamientos registrados
+- `/semana` — Horario habitual editable, excepciones, zona horaria y recomendaciones con sus motivos
 - `/workouts/[id]` — Detalle cardio (zonas FC, pace) o fuerza (resumen + registro serie a serie: ejercicios del catálogo o libres, editable)
 - `/plan` — Lista de macrociclos y progresión objetivo por microciclo
 
-PWA: `manifest.json` + iconos SVG + service worker en `public/sw.js` (cache-first para estáticos, network-first para navegaciones, registro client-side en `layout.tsx`).
+PWA: `manifest.json` + iconos SVG + service worker en `public/sw.js` (caché limitada a la portada pública y assets estáticos; las respuestas de salud se consultan en el backend local).
 
 ## Documentación
 
