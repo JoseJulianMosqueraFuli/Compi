@@ -72,7 +72,7 @@ def _receiver(directory, database_url, token):
             try:
                 with socket.create_connection(("127.0.0.1", port), timeout=1):
                     break
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, TimeoutError):
                 time.sleep(0.05)
         else:
             pytest.fail("Receiver did not start accepting connections")

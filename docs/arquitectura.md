@@ -21,7 +21,7 @@ flowchart LR
     M -->|sesiones y motivos| D
 ```
 
-Los dos servicios FastAPI comparten modelos, migraciones y base PostgreSQL. El receptor móvil acepta una sola operación autenticada. Los planes, las consultas de salud y las operaciones de administración se atienden en el computador. El conector directo de Huawei es experimental y requiere autorización específica. Los datos de demostración usan una base independiente.
+Los dos servicios FastAPI comparten modelos, migraciones y base PostgreSQL. El receptor móvil autentica dos operaciones por HTTPS. `GET /api/healthkit/connection` comprueba el token y el esquema de almacenamiento antes de solicitar acceso a Salud. `POST /api/healthkit/batches` recibe los cambios y confirma su secuencia. Los planes, las consultas de salud y las operaciones de administración se atienden en el computador. El conector directo de Huawei es experimental y requiere autorización específica. Los datos de demostración usan una base independiente.
 
 ## Decisiones y evidencia
 

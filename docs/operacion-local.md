@@ -31,17 +31,14 @@ En **Historial diario**, selecciona una categoría, una fuente y un día. El pul
 
 ## Emparejar por Wi-Fi
 
-1. Determina el nombre Bonjour del Mac con `scutil --get LocalHostName` y añade `.local`. Usa siempre ese nombre para el mismo receptor.
-2. Prepara un certificado TLS para ese nombre. Por ejemplo, con [mkcert](https://github.com/FiloSottile/mkcert) instalado, ejecuta desde la raíz:
+1. En los ajustes Wi-Fi del Mac consulta la IPv4 de tu red. El ejemplo usa `192.168.1.50`; sustitúyela en los comandos. Elige un nombre Bonjour estable o reserva la IP en tu router. El iPhone asocia el progreso de la importación a la dirección que guardes.
+2. Genera el certificado desde la raíz. El script incluye el nombre Bonjour y la IP privada para que puedas usar cualquiera de los dos al emparejar por primera vez.
 
    ```sh
-   umask 077
-   mkdir -p .compi-local/tls
-   mkcert -install
-   mkcert -cert-file .compi-local/tls/server.pem -key-file .compi-local/tls/server-key.pem "$(scutil --get LocalHostName).local"
+   bash scripts/prepare-iphone-tls.sh "$(scutil --get LocalHostName).local" 192.168.1.50
    ```
 
-   Transfiere al iPhone solo el certificado público `rootCA.pem` del directorio que indica `mkcert -CAROOT`. Verifica que corresponde a tu CA local, instala el perfil y habilita confianza en Ajustes → General → Información → Ajustes de confianza de certificados. Protege en el Mac ambas claves privadas. [Confianza de certificados en iOS](https://support.apple.com/102390).
+   Envía al iPhone por AirDrop el certificado público `.compi-local/tls/Compi-CA.cer`. Compara su huella SHA-256 con la que imprimió el script, instala el perfil y activa la confianza en Ajustes → General → Información → Ajustes de confianza de certificados. La clave privada del servidor permanece en el Mac. El script descarta la clave de firma de la autoridad después de emitir el certificado del servidor, válido durante 90 días. Para renovarlo, detén el receptor, mueve el directorio TLS anterior a un lugar privado y repite este paso. Tras comprobar el nuevo certificado, retira el perfil anterior del iPhone. [Confianza de certificados en iOS](https://support.apple.com/102390).
 3. Genera un secreto local con `openssl rand -hex 32` y establece ese valor en `HEALTHKIT_SYNC_TOKEN` en `backend/.env`. Restringe el archivo con `chmod 600 backend/.env`. Mantén `LEGACY_SYNC_MODE=off` en tu base personal.
 4. Desde `backend/`, con su entorno activo, inicia el receptor. Sustituye la dirección de ejemplo por la IPv4 Wi-Fi del computador, visible en los ajustes de red. El puerto elegido debe estar permitido en esa red.
 
@@ -50,9 +47,11 @@ En **Historial diario**, selecciona una categoría, una fuente y un día. El pul
      --ssl-keyfile ../.compi-local/tls/server-key.pem --ssl-certfile ../.compi-local/tls/server.pem
    ```
 
-5. Instala y configura [Compi para iPhone](../ios/README.md). Introduce el nombre HTTPS, el puerto y el secreto. Selecciona las categorías y pulsa **Sincronizar ahora**. La sincronización actual es en primer plano. Un lote confirmado permite avanzar el ancla local. Si se corta el envío el iPhone conserva los cambios pendientes.
+5. Instala y configura [Compi para iPhone](../ios/README.md). Con ambos equipos en la misma Wi-Fi, guarda la dirección HTTPS y el secreto. Pulsa **Probar conexión** y concede el acceso a la red local cuando lo solicite iOS. El mensaje de éxito confirma que el iPhone llega al receptor y que este puede abrir el esquema de salud. Después, elige las categorías y pulsa **Sincronizar ahora** para autorizar Salud. La sincronización ocurre en primer plano y conserva los lotes pendientes si se corta el envío.
 
 ## Comprobar y recuperar
+
+- Para aislar un fallo antes de usar el iPhone, ejecuta desde la raíz `curl --noproxy '*' --cacert .compi-local/tls/rootCA.pem -i https://192.168.1.50:8443/api/healthkit/connection` con la IP del certificado. Una respuesta HTTP 401 confirma que la red y el certificado funcionan desde ese equipo. La app envía el token al pulsar **Probar conexión**. Si se interrumpe TLS antes de la respuesta, comprueba la IP y el acceso a la red local de la aplicación que ejecuta el receptor en el Mac. Una red de invitados también puede aislar a los dispositivos. [Acceso a la red local en macOS](https://support.apple.com/guide/mac-help/mchla4f49138/mac).
 
 - `GET /health` comprueba el proceso y `GET /ready` la conexión del API local a la base. En el panel comprueba fuente, categorías y última recepción. El conector Huawei directo y su autorización son independientes de HealthKit.
 - Un 401 indica que conviene revisar el token. Para rotarlo, cambia el secreto en el Mac, reinicia el receptor y guarda el nuevo token en el iPhone para la misma dirección. Un 503 puede indicar un emparejamiento sin configurar o almacenamiento indisponible.

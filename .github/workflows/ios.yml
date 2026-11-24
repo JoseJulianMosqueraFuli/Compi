@@ -3,9 +3,9 @@ name: iOS
 on:
   push:
     branches: [main]
-    paths: ['ios/**', 'backend/app/models/health_schemas.py', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'backend/app/models/health_schemas.py', 'backend/app/mobile.py', '.github/workflows/ios.yml']
   pull_request:
-    paths: ['ios/**', 'backend/app/models/health_schemas.py', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'backend/app/models/health_schemas.py', 'backend/app/mobile.py', '.github/workflows/ios.yml']
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - name: Check the receiver protocol and offline replay with synthetic data
+        working-directory: ios
+        run: |
+          swiftc Compi/SyncData.swift Compi/Connection.swift Tests/SyncChecks.swift -o "$RUNNER_TEMP/compi-sync-checks"
+          "$RUNNER_TEMP/compi-sync-checks"
       - name: Compile the HealthKit companion for the iPhone simulator
         run: >-
           xcodebuild -project ios/Compi.xcodeproj -scheme Compi

@@ -3,10 +3,29 @@
 set -euo pipefail
 umask 077
 
-host=${1:?Uso: bash scripts/prepare-iphone-tls.sh nombre-del-mac.local}
+host=${1:?Uso: bash scripts/prepare-iphone-tls.sh nombre-del-mac.local [IPv4-Wi-Fi]}
 if [[ ! $host =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.local$ ]]; then
   echo "Se requiere el nombre Bonjour del Mac, por ejemplo mi-mac.local." >&2
   exit 2
+fi
+san="DNS:$host"
+if [[ $# -gt 2 ]]; then
+  echo "Se acepta un nombre Bonjour y una dirección IPv4 opcional." >&2
+  exit 2
+fi
+if [[ $# -eq 2 ]]; then
+  python3 - "$2" <<'PY'
+import ipaddress
+import sys
+
+try:
+    ip = ipaddress.IPv4Address(sys.argv[1])
+    if not any(ip in ipaddress.ip_network(net) for net in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")):
+        raise ValueError
+except ValueError:
+    sys.exit("La dirección debe ser la IPv4 privada de la interfaz Wi-Fi del Mac.")
+PY
+  san+=",IP:$2"
 fi
 root=$(cd "$(dirname "$0")/.." && pwd)
 local_dir="$root/.compi-local"
@@ -37,7 +56,7 @@ cat > "$stage/server.cnf" <<EOF
 basicConstraints = critical,CA:FALSE
 keyUsage = critical,digitalSignature,keyEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = DNS:$host
+subjectAltName = $san
 authorityKeyIdentifier = keyid
 EOF
 openssl req -newkey rsa:3072 -nodes -x509 -sha256 -days 365 -config "$stage/ca.cnf" \

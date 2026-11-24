@@ -7,7 +7,10 @@ El iPhone importa cambios desde Salud cuando pulsas **Sincronizar ahora** con la
 1. Prepara la base de datos y el receptor local según el [README del proyecto](../README.md). El receptor escucha por HTTPS. Usa un certificado con el nombre de tu Mac en el SAN y una autoridad en la que confíe el iPhone. Conserva la clave privada del servidor en el Mac.
 2. Abre `Compi.xcodeproj` en Xcode 16 o posterior, elige un equipo de firma con HealthKit y configura tu identificador de aplicación. Selecciona el iPhone como destino y ejecuta **Compi**. El proyecto tiene iOS 17 como versión mínima.
 3. Conecta ambos equipos a la misma Wi-Fi. En Compi escribe la dirección del receptor, por ejemplo `https://mi-mac.local:8443`, y el valor de `HEALTHKIT_SYNC_TOKEN` del backend. Pulsa **Guardar conexión**. La app acepta nombres `.local`, IPv4 privadas y direcciones IPv6 locales únicas. Mantén la misma dirección para reconectar con la misma base.
-4. Selecciona las categorías, pulsa **Sincronizar ahora** y permite el acceso a la red local. El historial inicial puede requerir varios lotes. Las siguientes sincronizaciones continúan desde el último lote confirmado.
+4. Pulsa **Probar conexión** y permite el acceso a la red local si el iPhone lo solicita. Puedes hacerlo con todas las categorías desactivadas. El mensaje **Conexión verificada** confirma que el receptor reconoce el token, usa un protocolo compatible y puede consultar su base. La prueba conserva los lotes pendientes y sus posiciones de lectura.
+5. Selecciona las categorías que quieras importar. Pulsa **Sincronizar ahora** y concede en Salud acceso de lectura a las categorías elegidas. El historial inicial puede requerir varios lotes. Las siguientes sincronizaciones continúan desde el último lote confirmado.
+
+Si la prueba indica un problema de red, revisa la Wi-Fi, el permiso de red local y que el receptor esté escuchando en la dirección guardada. Para un error de TLS, comprueba el nombre del certificado y la confianza en su autoridad en el iPhone. Si el receptor rechaza el token, vuelve a guardarlo en Compi con el valor configurado en el Mac. Un aviso de incompatibilidad indica que conviene revisar el puerto del receptor móvil y las versiones instaladas. Si el receptor avisa que todavía se está preparando, comprueba su configuración, la base de datos y las migraciones en el Mac.
 
 ## Cuando se interrumpe el envío
 
@@ -23,7 +26,7 @@ Si vas a reconstruir esa categoría desde Salud, deja la sincronización detenid
 
 ## Verificación con datos de prueba
 
-Desde `ios/`, las comprobaciones reproducen un reintento tras perder una confirmación, una eliminación y un destino rechazado:
+Desde `ios/`, estos comandos ejecutan las mismas comprobaciones que el flujo de CI de iOS. Un receptor simulado verifica que **Probar conexión** envíe una consulta autenticada sin muestras y que un lote pendiente siga intacto tras el éxito o un fallo. También se comprueban el reintento tras perder una confirmación, una eliminación y el rechazo de destinos externos.
 
 ```sh
 swiftc Compi/SyncData.swift Compi/Connection.swift Tests/SyncChecks.swift -o /tmp/compi-sync-checks
