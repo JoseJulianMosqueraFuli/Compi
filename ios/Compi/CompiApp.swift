@@ -58,7 +58,7 @@ final class SyncModel: ObservableObject {
     func checkConnection() async {
         guard !working, canUseConnection else { return }
         working = true
-        connectionMessage = "Comprobando el receptor…"
+        connectionMessage = "Comprobando el receptor… Si el iPhone pide acceso a la red local, pulsa Permitir."
         defer { working = false }
         do {
             guard let pairing = try Keychain.load() else { throw SyncError.credential }

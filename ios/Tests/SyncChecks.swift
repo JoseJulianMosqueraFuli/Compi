@@ -65,6 +65,8 @@ struct SyncChecks {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [ReceiverFixture.self]
         let transport = BatchTransport(config: config)
+        precondition(config.waitsForConnectivity && !config.allowsCellularAccess)
+        precondition(config.timeoutIntervalForResource == 60)
         func pairing(_ host: String) throws -> Pairing {
             Pairing(origin: try LocalServer.origin("https://\(host).local"), token: "synthetic-fixture")
         }

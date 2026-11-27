@@ -108,11 +108,13 @@ final class BatchTransport {
 
     init(config: URLSessionConfiguration = .ephemeral) {
         config.allowsCellularAccess = false
-        config.waitsForConnectivity = false
+        // The first LAN request can be waiting for the person to answer the iOS privacy prompt.
+        config.waitsForConnectivity = true
         config.urlCache = nil
         config.urlCredentialStorage = nil
         config.httpShouldSetCookies = false
         config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 60
         session = URLSession(configuration: config, delegate: NoRedirects(), delegateQueue: nil)
     }
 

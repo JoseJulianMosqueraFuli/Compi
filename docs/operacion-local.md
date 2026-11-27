@@ -51,7 +51,15 @@ En **Historial diario**, selecciona una categoría, una fuente y un día. El pul
 
 ## Comprobar y recuperar
 
-- Para aislar un fallo antes de usar el iPhone, ejecuta desde la raíz `curl --noproxy '*' --cacert .compi-local/tls/rootCA.pem -i https://192.168.1.50:8443/api/healthkit/connection` con la IP del certificado. Una respuesta HTTP 401 confirma que la red y el certificado funcionan desde ese equipo. La app envía el token al pulsar **Probar conexión**. Si se interrumpe TLS antes de la respuesta, comprueba la IP y el acceso a la red local de la aplicación que ejecuta el receptor en el Mac. Una red de invitados también puede aislar a los dispositivos. [Acceso a la red local en macOS](https://support.apple.com/guide/mac-help/mchla4f49138/mac).
+1. **Desde el Mac.** Con el receptor en marcha, ejecuta estos comandos desde la raíz y sustituye la IP por la del certificado. La prueba usa la CA del proyecto y el token del backend. Un HTTP 200 confirma el emparejamiento desde ese Mac. Si falla, el mensaje indica si el problema apareció al resolver el nombre, abrir TCP, negociar TLS o comprobar el token, el protocolo o el almacenamiento.
+
+   ```sh
+   cd backend
+   .venv/bin/python -m app.check_healthkit https://192.168.1.50:8443
+   ```
+
+2. **Desde Safari en el iPhone.** Una vez instalada y activada la confianza de la CA, abre `https://192.168.1.50:8443/api/healthkit/connection` en la misma Wi-Fi. Usa la IP de tu Mac. Puedes probar antes de instalar Xcode. La respuesta `{"detail":"pairing required"}` (HTTP 401) confirma que ese iPhone llegó al receptor por HTTPS. Mantén el token fuera de la URL.
+3. **Desde Compi en el iPhone.** Pulsa **Probar conexión** con la dirección y el token guardados. iOS controla el permiso de red local de la app. En el Mac, un servicio puede escuchar y aceptar conexiones TCP entrantes sin ese permiso. Si TLS se corta antes de presentar el certificado, compara lo que ocurre en Safari con el resultado del Mac y comprueba que ambos están en una red que admite conexiones entre dispositivos. [Privacidad de red local de Apple](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy)
 
 - `GET /health` comprueba el proceso y `GET /ready` la conexión del API local a la base. En el panel comprueba fuente, categorías y última recepción. El conector Huawei directo y su autorización son independientes de HealthKit.
 - Un 401 indica que conviene revisar el token. Para rotarlo, cambia el secreto en el Mac, reinicia el receptor y guarda el nuevo token en el iPhone para la misma dirección. Un 503 puede indicar un emparejamiento sin configurar o almacenamiento indisponible.
