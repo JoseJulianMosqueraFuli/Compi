@@ -1,27 +1,53 @@
 # Arquitectura de Compi
 
-Compi ayuda a decidir qué entrenar durante el tiempo disponible. El primer usuario combina fuerza en gimnasio, caminatas y carrera al aire libre. El peso corporal, los kilos de una serie y los minutos disponibles representan tres medidas distintas. Los objetivos de composición corporal y respiración orientan el producto; hoy la evidencia para recomendar procede del historial de sesiones, las series registradas y el horario declarado.
+Compi ayuda a decidir qué entrenar durante el tiempo disponible. La primera versión combina fuerza en gimnasio, caminatas y carrera al aire libre. El iPhone recoge las categorías de Salud que autoriza la persona. En el Mac se conserva el historial y se genera la semana a partir de la disponibilidad, las preferencias y el entrenamiento registrado. La composición corporal y la respiración son objetivos personales para futuras evaluaciones.
 
 ## Recorrido de los datos
 
+El diagrama muestra el recorrido implementado. El panel y su base se verificaron el 27 de noviembre de 2026. La línea discontinua marca el tramo pendiente de validar con la primera importación desde el iPhone físico. [Ver imagen](diagramas/arquitectura-local.png) · [Estado de la primera sincronización](operacion-local.md#estado-de-la-primera-sincronización)
+
 ```mermaid
-flowchart LR
-    W[Reloj Huawei] --> H[Huawei Health]
-    H -->|categorías compartidas| A[Salud de Apple]
-    P[Fuentes del iPhone] --> A
-    A -->|HealthKit y permiso de lectura| I[Compi SwiftUI]
-    I -->|lote HTTPS por Wi-Fi| R[Receptor FastAPI]
-    R --> O[(Observaciones y cursores)]
-    O --> E[Evaluación temporal de duración]
-    O -->|selección confirmada en el panel| T
-    E --> D[Panel local Next.js]
-    D -->|horario, excepciones y series| B[API personal FastAPI]
-    B --> T[(Sesiones y registros)]
-    T --> M[Recomendador por reglas]
-    M -->|sesiones y motivos| D
+flowchart TB
+    accTitle: Arquitectura local de Compi
+    accDescr: Salud reúne datos del reloj y del iPhone. Compi los envía al receptor del Mac. El panel accede a la misma base mediante una API local.
+    Watch["Huawei Watch Fit 4 Pro"]
+    subgraph Phone["iPhone"]
+        Huawei["Huawei Health"]
+        Other["iPhone y otras apps"]
+        Health["Salud de Apple"]
+        App["Compi · SwiftUI"]
+        Huawei -->|categorías compartidas| Health
+        Other --> Health
+        Health -->|lectura autorizada con HealthKit| App
+    end
+    Watch --> Huawei
+    subgraph Mac["Mac · instalación personal"]
+        Receiver["Receptor móvil · FastAPI<br/>HTTPS · puerto 8443"]
+        Web["Panel · Next.js<br/>localhost:3000"]
+        API["API personal · FastAPI<br/>localhost:8000"]
+        DB[("PostgreSQL<br/>Observaciones, cursores, sesiones y planes")]
+        Receiver -->|guarda cambios y cursor| DB
+        Web <-->|consultas y edición| API
+        API <-->|lectura y escritura| DB
+    end
+    App -.->|HTTPS por Wi-Fi con token<br/>Validación física pendiente| Receiver
+    classDef source fill:#eaf5f1,stroke:#4c7a6c,color:#183d32
+    classDef service fill:#ecf3fc,stroke:#507499,color:#183753
+    classDef storage fill:#fcf2da,stroke:#987935,color:#503d13
+    class Watch,Huawei,Other,Health source
+    class App,Receiver,Web,API service
+    class DB storage
 ```
 
-Los dos servicios FastAPI comparten modelos, migraciones y base PostgreSQL. El receptor móvil autentica dos operaciones por HTTPS. `GET /api/healthkit/connection` comprueba el token y el esquema de almacenamiento antes de solicitar acceso a Salud. `POST /api/healthkit/batches` recibe los cambios y confirma su secuencia. Los planes, las consultas de salud y las operaciones de administración se atienden en el computador. El conector directo de Huawei es experimental y requiere autorización específica. Los datos de demostración usan una base independiente.
+El iPhone contacta al receptor por Wi-Fi. **Probar conexión** usa `GET /api/healthkit/connection` para comprobar el token, la versión del protocolo y el acceso al esquema antes de pedir permiso a Salud. **Sincronizar ahora** usa `POST /api/healthkit/batches` para enviar los cambios. El navegador del Mac usa la API personal para consultar el historial, confirmar actividades y editar la semana. Ambos procesos FastAPI comparten modelos, migraciones y la misma base personal. [Receptor móvil](../backend/app/mobile.py) · [API personal](../backend/app/main.py)
+
+La app guarda la credencial de emparejamiento en el llavero del iPhone. En el Mac, el puerto de PostgreSQL se publica solo en loopback. La demo conserva sus ejemplos en una base independiente. El conector directo de Huawei es experimental y requiere autorización específica. Para el reloj del diagrama, Compi lee las muestras que Huawei Health comparte con Salud en el iPhone. [Credencial y transporte](../ios/Compi/Connection.swift) · [Red de PostgreSQL](../docker-compose.yml)
+
+### Cómo llega una actividad al recomendador
+
+Por ejemplo, una caminata compartida por Huawei aparece en el panel como observación con su fuente y su intervalo. En **Entrenamientos importados**, la persona puede crear una sesión editable o asociarla a una que ya registró. En un entrenamiento de fuerza puede añadir las series, repeticiones, kilos y descansos que realizó. Este paso evita contar dos veces una actividad que ya estaba registrada si se vincula a la sesión existente. [Conciliación de entrenamientos](../backend/app/routers/health_workouts.py)
+
+El planificador por reglas combina horario semanal, excepciones, preferencias e historial de entrenamiento para proponer sesiones con duración y motivo. Por separado, el experimento de duración toma entrenamientos importados de una fuente y compara dos estimaciones con el tiempo que realmente transcurrió. Sus resultados se consultan en el panel. Adoptar una estimación para generar futuras semanas requiere una decisión posterior. [Generación de la semana](../backend/app/services/week_service.py) · [Evaluación temporal](../backend/app/services/duration_experiment.py)
 
 ## Decisiones y evidencia
 
@@ -50,6 +76,39 @@ PostgreSQL conserva los tiempos en UTC y un índice por categoría e inicio. En 
 | Experimento | Versión de la evaluación, huella del conjunto, referencia, ventana histórica, número de sesiones evaluadas, error y subestimaciones. Las correcciones y borrados pueden cambiar la huella al repetirlo. |
 
 Una categoría vacía indica que Compi carece de evidencia visible. Tampoco basta una variación de peso para calcular grasa o masa muscular. Una futura estimación personal debe identificar sus insumos, expresar su incertidumbre y permitir que el usuario la confirme o corrija.
+
+## Sincronización de un lote
+
+**Sincronizar ahora** solicita lectura de las categorías elegidas. El diagrama sigue una categoría con cambios. El ancla indica hasta dónde leyó el iPhone en Salud. El cursor de PostgreSQL identifica el último lote confirmado de esa categoría. [Ver imagen](diagramas/sincronizacion.png)
+
+```mermaid
+sequenceDiagram
+    accTitle: Sincronización de un lote de HealthKit
+    accDescr: El iPhone conserva el lote mientras espera confirmación. Si se pierde la respuesta tras el guardado en PostgreSQL, vuelve a enviarlo y el receptor confirma su secuencia.
+    participant H as HealthKit
+    participant I as Compi en iPhone
+    participant R as Receptor del Mac
+    participant D as PostgreSQL
+    opt Hace falta preparar un lote
+        I->>H: Leer desde el ancla confirmada
+        H-->>I: Muestras, borrados y ancla siguiente
+        I->>I: Guardar lote y ancla siguiente en disco
+    end
+    I->>R: POST /api/healthkit/batches con secuencia N
+    R->>D: Aplicar cambios y actualizar cursor en una transacción
+    D-->>R: Transacción confirmada
+    alt La respuesta llega al iPhone
+        R-->>I: HTTP 200 con secuencia N y applied=true
+    else Se pierde la respuesta después de guardar el lote
+        I->>R: Reenviar el mismo lote al volver a sincronizar
+        R->>D: Comprobar flujo, secuencia y huella
+        D-->>R: Coincide con el último lote confirmado
+        R-->>I: HTTP 200 con secuencia N y applied=false
+    end
+    I->>I: Validar N, guardar el ancla y retirar el lote pendiente
+```
+
+Un conflicto de flujo, secuencia o contenido devuelve HTTP 409. Si el almacenamiento está indisponible, el receptor devuelve HTTP 503. En ambos casos el iPhone conserva el lote y su posición anterior. Una página de Salud sin cambios visibles termina la lectura de esa categoría. [Estado local del iPhone](../ios/Compi/SyncData.swift) · [Bucle de sincronización](../ios/Compi/CompiApp.swift) · [Transacción del receptor](../backend/app/services/healthkit.py) · [Guía de recuperación](operacion-local.md#comprobar-y-recuperar)
 
 ## Operación, aprendizaje y costo
 

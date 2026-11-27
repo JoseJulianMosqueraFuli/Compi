@@ -49,6 +49,18 @@ En **Historial diario**, selecciona una categoría, una fuente y un día. El pul
 
 5. Instala y configura [Compi para iPhone](../ios/README.md). Con ambos equipos en la misma Wi-Fi, guarda la dirección HTTPS y el secreto. Pulsa **Probar conexión** y concede el acceso a la red local cuando lo solicite iOS. El mensaje de éxito confirma que el iPhone llega al receptor y que este puede abrir el esquema de salud. Después, elige las categorías y pulsa **Sincronizar ahora** para autorizar Salud. La sincronización ocurre en primer plano y conserva los lotes pendientes si se corta el envío.
 
+## Estado de la primera sincronización
+
+Verificación del **27 de noviembre de 2026** en el Mac de desarrollo. La primera importación desde el iPhone físico sigue pendiente.
+
+| Tramo | Resultado observado | Qué permite concluir |
+|---|---|---|
+| Panel y API personal | La portada, `/semana` y `GET /ready` respondieron HTTP 200. | El panel está disponible en el Mac y la API alcanza PostgreSQL. |
+| Recepción de Salud | `GET /api/healthkit/coverage` devolvió cuatro categorías, cero con lote recibido y cero muestras en total. | La base personal aún no registra una importación. |
+| Mac hacia el receptor por su IP Wi-Fi | El receptor escuchaba en 8443. La negociación TLS se cortó antes de enviar el token. | El intento terminó antes de la autenticación. La causa del cierre y el resultado desde el iPhone físico siguen pendientes. |
+
+Para cerrar este hito, comprueba primero el acceso desde Safari y el emparejamiento desde Compi como se indica abajo. Luego sincroniza **Entrenamientos** con el permiso de lectura activo. Actualiza el panel y contrasta la fuente y el intervalo de un entrenamiento con Salud. Repite la sincronización sin cambios en Salud y verifica que el entrenamiento aparece una sola vez.
+
 ## Comprobar y recuperar
 
 1. **Desde el Mac.** Con el receptor en marcha, ejecuta estos comandos desde la raíz y sustituye la IP por la del certificado. La prueba usa la CA del proyecto y el token del backend. Un HTTP 200 confirma el emparejamiento desde ese Mac. Si falla, el mensaje indica si el problema apareció al resolver el nombre, abrir TCP, negociar TLS o comprobar el token, el protocolo o el almacenamiento.

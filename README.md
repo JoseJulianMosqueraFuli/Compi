@@ -2,6 +2,8 @@
 
 Compi reúne el historial autorizado del iPhone y del reloj Huawei, el registro de fuerza por serie y el tiempo disponible para entrenar. Es una plataforma personal de recomendaciones y un proyecto práctico de MLOps. La primera instalación vive en el iPhone y en el computador.
 
+[Diagrama de arquitectura](docs/arquitectura.md#recorrido-de-los-datos) · [Secuencia de sincronización y reintento](docs/arquitectura.md#sincronización-de-un-lote) · [Estado de la primera importación](docs/operacion-local.md#estado-de-la-primera-sincronización)
+
 ## Usar Compi
 
 1. **Conecta el iPhone.** La app nativa lee desde Salud los entrenamientos, el sueño, la frecuencia cardiaca y el peso corporal que elijas compartir. En la misma Wi-Fi, envía los cambios a tu computador por HTTPS. [Instalación local](docs/operacion-local.md) · [App SwiftUI](ios/README.md).
