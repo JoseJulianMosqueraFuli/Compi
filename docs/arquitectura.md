@@ -112,6 +112,8 @@ Un conflicto de flujo, secuencia o contenido devuelve HTTP 409. Si el almacenami
 
 ## Operación, aprendizaje y costo
 
+La [arquitectura AWS](arquitectura-aws.md) muestra los recursos del laboratorio sintético por lotes y el diseño propuesto para operar el producto y evaluar modelos en la nube.
+
 | Pregunta | Señal y uso |
 |---|---|
 | ¿Llegó la información? | Último lote y número de muestras por categoría en el panel privado. Revisar el permiso y la conectividad cuando haya un hueco. |

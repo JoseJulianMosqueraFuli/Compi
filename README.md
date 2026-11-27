@@ -2,7 +2,7 @@
 
 Compi reúne el historial autorizado del iPhone y del reloj Huawei, el registro de fuerza por serie y el tiempo disponible para entrenar. Es una plataforma personal de recomendaciones y un proyecto práctico de MLOps. La primera instalación vive en el iPhone y en el computador.
 
-[Diagrama de arquitectura](docs/arquitectura.md#recorrido-de-los-datos) · [Secuencia de sincronización y reintento](docs/arquitectura.md#sincronización-de-un-lote) · [Estado de la primera importación](docs/operacion-local.md#estado-de-la-primera-sincronización)
+[Arquitectura local](docs/arquitectura.md#recorrido-de-los-datos) · [Arquitectura AWS y MLOps](docs/arquitectura-aws.md) · [Secuencia de sincronización y reintento](docs/arquitectura.md#sincronización-de-un-lote) · [Estado de la primera importación](docs/operacion-local.md#estado-de-la-primera-sincronización)
 
 ## Usar Compi
 

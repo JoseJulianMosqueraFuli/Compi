@@ -1,5 +1,7 @@
 # Laboratorio AWS del recomendador
 
+Consulta el [diagrama del laboratorio y la propuesta de plataforma MLOps](../../docs/arquitectura-aws.md) para identificar qué crea la pila, qué recursos deben existir antes de ejecutar el ensayo y qué resultados conservar al cerrarlo.
+
 [La plantilla](template.json) prepara un clúster ECS y una definición Fargate Linux x86_64 de 0,25 vCPU y 512 MiB. Cada invocación de [run.sh](run.sh) ejecuta `python -m app.experiment --synthetic` una vez. El informe de duración se escribe en CloudWatch Logs y puede guardarse en el equipo para comparar ejecuciones. El contenedor carece de rol de tarea, volúmenes, puertos y credenciales de Compi. Fargate usa su propio rol para descargar una imagen privada de ECR por digest y escribir logs.
 
 ## Preparación
