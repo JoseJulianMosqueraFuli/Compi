@@ -4,35 +4,9 @@
 
 ## Laboratorio definido en CloudFormation
 
-```mermaid
-flowchart TB
-    accTitle: Laboratorio sintético de Compi en AWS
-    accDescr: El operador prepara la pila y lanza una tarea en ECS. Fargate descarga la imagen de ECR, ejecuta el experimento y envía el informe a CloudWatch Logs. El operador guarda una copia local.
-    Op["Mac del operador"]
-    subgraph AWS["AWS"]
-        CF["CloudFormation"]
-        ECS["Amazon ECS<br/>Clúster y definición de tarea"]
-        ECR["Amazon ECR existente<br/>Imagen por digest"]
-        subgraph Subnet["Subred privada"]
-            Job["Tarea puntual en Fargate<br/>Evaluación sintética"]
-        end
-        Logs["CloudWatch Logs<br/>Retención de 3 días"]
-        CF -->|define| ECS
-        ECS -->|lanza una tarea| Job
-        ECR -->|imagen del experimento| Job
-        Job -->|informe por awslogs| Logs
-    end
-    Op -->|despliega la plantilla| CF
-    Op -->|publica la imagen| ECR
-    Op -->|run.sh invoca RunTask| ECS
-    Logs -->|run.sh recupera el resultado| Report["Informe JSON en el Mac"]
-    classDef compute fill:#fff2dc,stroke:#92682f,color:#503711
-    classDef data fill:#e9f5ef,stroke:#497a61,color:#1c432d
-    class ECS,Job compute
-    class ECR,Logs,Report data
-```
+![El Mac configura ECS con CloudFormation y publica la imagen en ECR. Fargate ejecuta el experimento y envía el informe a CloudWatch Logs para recuperarlo desde el Mac.](diagramas/aws-laboratorio.png)
 
-[Diagrama editable del laboratorio en draw.io](diagramas/aws-laboratorio.drawio) · [Ver imagen](diagramas/aws-laboratorio.png)
+[Diagrama editable del laboratorio en draw.io](diagramas/aws-laboratorio.drawio) · [Ampliar imagen](diagramas/aws-laboratorio.png)
 
 | Recurso o decisión | Qué ocurre al ejecutar el laboratorio |
 |---|---|
@@ -47,40 +21,9 @@ En la comprobación **local** del comando definido para Fargate se generaron 18 
 
 Esta vista es un diseño futuro. Conserva el cliente Swift, el panel Next.js y la API FastAPI. Introduce identidad por persona, una base operativa privada y un proceso independiente para evaluar versiones del recomendador. Los componentes de esta vista requieren implementación y pruebas antes de admitir datos personales.
 
-```mermaid
-flowchart TB
-    accTitle: Plataforma de producto y MLOps propuesta para Compi
-    accDescr: El iPhone y el navegador se autentican con Cognito. Un balanceador HTTPS dirige tráfico al panel y a la API en Fargate. La API utiliza RDS. Un flujo de Step Functions evalúa versiones en Fargate con datos y artefactos versionados en S3. Una revisión aprueba la versión que consume la API.
-    Client["iPhone y navegador"]
-    Auth["Amazon Cognito<br/>Identidad por persona"]
-    Client <-->|inicio de sesión| Auth
-    subgraph Product["Aplicación"]
-        ALB["Balanceador HTTPS · ALB"]
-        Web["Next.js en ECS Fargate"]
-        API["FastAPI en ECS Fargate<br/>Ingesta y recomendaciones"]
-        DB[("RDS PostgreSQL privado<br/>Historial, cursores y planes")]
-        ALB -->|páginas| Web
-        ALB -->|API| API
-        API <-->|datos por usuario| DB
-    end
-    Client -->|HTTPS| ALB
-    subgraph ML["Evaluación por lotes"]
-        Flow["Step Functions Standard"]
-        Eval["Tarea ECS Fargate<br/>Evaluar candidato"]
-        Store[("S3 privado y versionado<br/>Datasets, artefactos e informes")]
-        Gate["Revisión y promoción<br/>de una versión"]
-        Flow -->|ejecuta y espera| Eval
-        Eval <-->|lee dataset y guarda resultados| Store
-        Store -->|evidencia| Gate
-    end
-    Gate -.->|versión aprobada| API
-    classDef compute fill:#fff2dc,stroke:#92682f,color:#503711
-    classDef data fill:#e9f5ef,stroke:#497a61,color:#1c432d
-    class Web,API,Eval compute
-    class DB,Store data
-```
+![Plataforma propuesta con Cognito, un balanceador de aplicaciones, servicios en Fargate y RDS. Step Functions coordina la evaluación con S3 y una revisión humana decide qué versión llega a la API.](diagramas/aws-mlops.png)
 
-[Diagrama editable de la plataforma propuesta en draw.io](diagramas/aws-mlops.drawio) · [Ver imagen](diagramas/aws-mlops.png)
+[Diagrama editable de la plataforma propuesta en draw.io](diagramas/aws-mlops.drawio) · [Ampliar imagen](diagramas/aws-mlops.png)
 
 **Red del producto.** El ALB sería el único punto de entrada de la aplicación, con certificado público y rutas para la web y la API. Los dos servicios Fargate vivirían en subredes privadas y aceptarían tráfico del balanceador. Solo la API y los trabajos expresamente autorizados podrían acceder a RDS. Esta distribución conserva el servidor Next.js y los módulos Python que ya tiene Compi. [Balanceo de aplicaciones en ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/alb.html)
 
