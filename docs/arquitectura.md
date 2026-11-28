@@ -4,7 +4,7 @@ Compi ayuda a decidir qué entrenar durante el tiempo disponible. La primera ver
 
 ## Recorrido de los datos
 
-El diagrama muestra el recorrido implementado. El panel y su base se verificaron el 27 de noviembre de 2026. La línea discontinua marca el tramo pendiente de validar con la primera importación desde el iPhone físico. [Ver imagen](diagramas/arquitectura-local.png) · [Estado de la primera sincronización](operacion-local.md#estado-de-la-primera-sincronización)
+El diagrama muestra el recorrido implementado. El panel y su base se verificaron el 27 de noviembre de 2026. La línea discontinua marca el tramo pendiente de validar con la primera importación desde el iPhone físico. [Diagrama editable de draw.io](diagramas/arquitectura-local.drawio) · [Ver imagen](diagramas/arquitectura-local.png) · [Estado de la primera sincronización](operacion-local.md#estado-de-la-primera-sincronización)
 
 ```mermaid
 flowchart TB
@@ -79,7 +79,7 @@ Una categoría vacía indica que Compi carece de evidencia visible. Tampoco bast
 
 ## Sincronización de un lote
 
-**Sincronizar ahora** solicita lectura de las categorías elegidas. El diagrama sigue una categoría con cambios. El ancla indica hasta dónde leyó el iPhone en Salud. El cursor de PostgreSQL identifica el último lote confirmado de esa categoría. [Ver imagen](diagramas/sincronizacion.png)
+**Sincronizar ahora** solicita lectura de las categorías elegidas. El diagrama sigue una categoría con cambios. El ancla indica hasta dónde leyó el iPhone en Salud. El cursor de PostgreSQL identifica el último lote confirmado de esa categoría. [Diagrama editable de draw.io](diagramas/sincronizacion.drawio) · [Ver imagen](diagramas/sincronizacion.png)
 
 ```mermaid
 sequenceDiagram

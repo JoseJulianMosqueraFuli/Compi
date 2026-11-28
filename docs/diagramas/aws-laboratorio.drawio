@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram id="laboratorio" name="Laboratorio AWS">
+    <mxGraphModel dx="960" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="960" pageHeight="850" math="0" shadow="0" background="#ffffff">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Laboratorio AWS del recomendador" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontFamily=Helvetica;fontSize=25;fontStyle=1;fontColor=#18334A;" vertex="1" parent="1">
+          <mxGeometry x="32" y="16" width="860" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="mac" value="&lt;b&gt;Mac del operador&lt;/b&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=16;fontColor=#20384C;fillColor=#ECF2F8;strokeColor=#6D89A1;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="370" y="78" width="220" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="aws" value="AWS · Laboratorio sintético" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=174;fontFamily=Helvetica;fontStyle=1;fontSize=16;fontColor=#526778;fillColor=#F8FAFC;strokeColor=#ACBEC9;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="32" y="180" width="896" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="cfn" value="&lt;b&gt;AWS CloudFormation&lt;/b&gt;&lt;br&gt;Plantilla del laboratorio" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=15;fontColor=#20384C;fillColor=#ECF2F8;strokeColor=#6D89A1;strokeWidth=1.5;" vertex="1" parent="aws">
+          <mxGeometry x="38" y="64" width="220" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="ecs" value="&lt;b&gt;Amazon ECS&lt;/b&gt;&lt;br&gt;Clúster y definición de tarea" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=15;fontColor=#503711;fillColor=#FFF2DC;strokeColor=#92682F;strokeWidth=1.5;" vertex="1" parent="aws">
+          <mxGeometry x="338" y="64" width="220" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="ecr" value="&lt;b&gt;Amazon ECR&lt;/b&gt;&lt;br&gt;Repositorio privado existente" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=15;fontColor=#1C432D;fillColor=#E9F5EF;strokeColor=#497A61;strokeWidth=1.5;" vertex="1" parent="aws">
+          <mxGeometry x="638" y="64" width="220" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="subnet" value="Subred privada existente" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fontFamily=Helvetica;fontSize=14;fontColor=#526778;fillColor=#FFFFFF;strokeColor=#A9BBC7;dashed=1;container=1;collapsible=0;" vertex="1" parent="aws">
+          <mxGeometry x="233" y="202" width="430" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="job" value="&lt;b&gt;Tarea en AWS Fargate&lt;/b&gt;&lt;br&gt;Evaluación con sesiones sintéticas" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=15;fontColor=#503711;fillColor=#FFF2DC;strokeColor=#92682F;strokeWidth=1.5;" vertex="1" parent="subnet">
+          <mxGeometry x="85" y="44" width="260" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="logs" value="&lt;b&gt;CloudWatch Logs&lt;/b&gt;&lt;br&gt;Retención de tres días" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=15;fontColor=#1C432D;fillColor=#E9F5EF;strokeColor=#497A61;strokeWidth=1.5;" vertex="1" parent="aws">
+          <mxGeometry x="338" y="404" width="220" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="json" value="&lt;b&gt;Informe JSON en el Mac&lt;/b&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=16;fontColor=#1C432D;fillColor=#E9F5EF;strokeColor=#497A61;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="365" y="754" width="230" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="deploy" value="despliega la plantilla" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="mac" target="cfn">
+          <mxGeometry x="-0.43" relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="106"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="run" value="run.sh invoca RunTask" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="mac" target="ecs">
+          <mxGeometry x="-0.4" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="push" value="publica la imagen" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="mac" target="ecr">
+          <mxGeometry x="-0.43" relative="1" as="geometry">
+            <Array as="points"><mxPoint x="780" y="106"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="define" value="define" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#F8FAFC;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="aws" source="cfn" target="ecs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="launch" value="lanza la tarea" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#F8FAFC;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="aws" source="ecs" target="job">
+          <mxGeometry x="-0.37" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="image" value="imagen por digest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#F8FAFC;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="aws" source="ecr" target="job">
+          <mxGeometry x="-0.51" relative="1" as="geometry">
+            <Array as="points"><mxPoint x="748" y="280"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="write" value="envía el informe por awslogs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#F8FAFC;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="aws" source="job" target="logs">
+          <mxGeometry x="0.34" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="retrieve" value="run.sh recupera el resultado" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=14;fontColor=#20384C;strokeColor=#476073;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="logs" target="json">
+          <mxGeometry x="0.2" relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

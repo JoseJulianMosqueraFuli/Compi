@@ -32,7 +32,7 @@ flowchart TB
     class ECR,Logs,Report data
 ```
 
-[Abrir el diagrama del laboratorio](diagramas/aws-laboratorio.png)
+[Diagrama editable del laboratorio en draw.io](diagramas/aws-laboratorio.drawio) · [Ver imagen](diagramas/aws-laboratorio.png)
 
 | Recurso o decisión | Qué ocurre al ejecutar el laboratorio |
 |---|---|
@@ -80,7 +80,7 @@ flowchart TB
     class DB,Store data
 ```
 
-[Abrir el diagrama de la plataforma propuesta](diagramas/aws-mlops.png)
+[Diagrama editable de la plataforma propuesta en draw.io](diagramas/aws-mlops.drawio) · [Ver imagen](diagramas/aws-mlops.png)
 
 **Red del producto.** El ALB sería el único punto de entrada de la aplicación, con certificado público y rutas para la web y la API. Los dos servicios Fargate vivirían en subredes privadas y aceptarían tráfico del balanceador. Solo la API y los trabajos expresamente autorizados podrían acceder a RDS. Esta distribución conserva el servidor Next.js y los módulos Python que ya tiene Compi. [Balanceo de aplicaciones en ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/alb.html)
 

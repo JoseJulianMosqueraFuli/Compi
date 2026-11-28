@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" compressed="false">
+  <diagram id="sync-healthkit" name="Sincronización">
+    <mxGraphModel dx="1440" dy="1190" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="1170" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="titulo" value="Sincronización de un lote de HealthKit" style="text;strokeColor=none;fillColor=none;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=34;fontColor=#19354A;fontStyle=1;verticalAlign=middle;align=left;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="26" width="1330" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="alcance" value="Recorrido de una categoría con cambios, desde la lectura en el iPhone hasta la confirmación del lote N." style="text;strokeColor=none;fillColor=none;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=18;fontColor=#4C6373;fontStyle=0;verticalAlign=middle;align=left;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="79" width="1340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="healthkit" value="HealthKit" style="rounded=1;arcSize=18;align=center;strokeWidth=1.5;strokeColor=#336B59;fillColor=#E7F4EF;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=20;fontColor=#19354A;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="45" y="138" width="290" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="vida-healthkit" value="" style="rounded=0;strokeColor=#A8B7C2;fillColor=none;strokeWidth=1;dashed=1;dashPattern=4 5;align=center;pointerEvents=1;" vertex="1" parent="healthkit">
+          <mxGeometry x="144.5" y="56" width="1" height="842" as="geometry" />
+        </mxCell>
+        <mxCell id="iphone" value="Compi en iPhone" style="rounded=1;arcSize=18;align=center;strokeWidth=1.5;strokeColor=#336B59;fillColor=#E7F4EF;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=20;fontColor=#19354A;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="395" y="138" width="290" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="vida-iphone" value="" style="rounded=0;strokeColor=#A8B7C2;fillColor=none;strokeWidth=1;dashed=1;dashPattern=4 5;align=center;pointerEvents=1;" vertex="1" parent="iphone">
+          <mxGeometry x="144.5" y="56" width="1" height="842" as="geometry" />
+        </mxCell>
+        <mxCell id="receptor" value="Receptor del Mac" style="rounded=1;arcSize=18;align=center;strokeWidth=1.5;strokeColor=#3B658B;fillColor=#EAF1F9;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=20;fontColor=#19354A;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="745" y="138" width="290" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="vida-receptor" value="" style="rounded=0;strokeColor=#A8B7C2;fillColor=none;strokeWidth=1;dashed=1;dashPattern=4 5;align=center;pointerEvents=1;" vertex="1" parent="receptor">
+          <mxGeometry x="144.5" y="56" width="1" height="842" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" value="PostgreSQL" style="rounded=1;arcSize=18;align=center;strokeWidth=1.5;strokeColor=#876730;fillColor=#FCF2DE;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=20;fontColor=#19354A;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="138" width="290" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="vida-postgres" value="" style="rounded=0;strokeColor=#A8B7C2;fillColor=none;strokeWidth=1;dashed=1;dashPattern=4 5;align=center;pointerEvents=1;" vertex="1" parent="postgres">
+          <mxGeometry x="144.5" y="56" width="1" height="842" as="geometry" />
+        </mxCell>
+        <mxCell id="fase-preparar" value="Preparación en el iPhone · Si ya hay un lote pendiente, se reutiliza en el envío" style="rounded=1;arcSize=12;strokeColor=none;fillColor=#EDF5F1;align=left;spacingLeft=14;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#2D5A49;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="215" width="1350" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lectura" value="Leer desde el ancla confirmada" parent="1" edge="1" source="vida-iphone" target="vida-healthkit" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#365F83;strokeColor=#365F83;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.124703088;entryY=0.124703088;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cambios" value="Muestras, borrados y ancla siguiente" parent="1" edge="1" source="vida-healthkit" target="vida-iphone" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#376A63;strokeColor=#376A63;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.184085511;entryY=0.184085511;dashed=1;dashPattern=6 4;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="preparar" value="Guardar el lote N y el ancla siguiente&#10;como pendientes en disco" style="rounded=1;arcSize=16;align=center;strokeColor=#6F9689;strokeWidth=1.4;fillColor=#F3F9F6;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#284F43;fontStyle=0;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="378" y="371" width="324" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fase-enviar" value="Envío y confirmación en el Mac" style="rounded=1;arcSize=12;strokeColor=none;fillColor=#EDF3F9;align=left;spacingLeft=14;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#2E526F;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="451" width="1350" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="envio" value="Enviar lote N por HTTPS&#10;POST /api/healthkit/batches" parent="1" edge="1" source="vida-iphone" target="vida-receptor" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#365F83;strokeColor=#365F83;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.420427553;entryY=0.420427553;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-24" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="transaccion" value="Aplicar cambios y actualizar el cursor&#10;en una sola transacción" parent="1" edge="1" source="vida-receptor" target="vida-postgres" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#365F83;strokeColor=#365F83;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.494061758;entryY=0.494061758;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-24" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="commit" value="Transacción confirmada" parent="1" edge="1" source="vida-postgres" target="vida-receptor" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#376A63;strokeColor=#376A63;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.546318290;entryY=0.546318290;dashed=1;dashPattern=6 4;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="caso-exito" value="Si llega la respuesta al iPhone" style="rounded=1;arcSize=12;strokeColor=none;fillColor=#EDF5F1;align=left;spacingLeft=14;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#2D5A49;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="678" width="1350" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="confirmado" value="HTTP 200 · secuencia N · applied=true" parent="1" edge="1" source="vida-receptor" target="vida-iphone" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#376A63;strokeColor=#376A63;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.665083135;entryY=0.665083135;dashed=1;dashPattern=6 4;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="caso-reintento" value="Si se pierde la respuesta después de confirmar la transacción" style="rounded=1;arcSize=12;strokeColor=none;fillColor=#FBF2DF;align=left;spacingLeft=14;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#705722;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="777" width="1350" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="reenvio" value="Al sincronizar de nuevo, reenviar el mismo lote N" parent="1" edge="1" source="vida-iphone" target="vida-receptor" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#365F83;strokeColor=#365F83;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.782660333;entryY=0.782660333;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buscar" value="Comprobar flujo, secuencia y huella" parent="1" edge="1" source="vida-receptor" target="vida-postgres" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#365F83;strokeColor=#365F83;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.837292162;entryY=0.837292162;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="coincidencia" value="Coincide con el último lote confirmado" parent="1" edge="1" source="vida-postgres" target="vida-receptor" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#376A63;strokeColor=#376A63;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.889548694;entryY=0.889548694;dashed=1;dashPattern=6 4;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="repetido" value="HTTP 200 · secuencia N · applied=false" parent="1" edge="1" source="vida-receptor" target="vida-iphone" style="edgeStyle=none;rounded=0;html=0;fontFamily=Helvetica;fontSize=16;fontColor=#376A63;strokeColor=#376A63;strokeWidth=1.7;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;exitX=0.5;entryX=0.5;exitPerimeter=0;entryPerimeter=0;exitY=0.939429929;entryY=0.939429929;dashed=1;dashPattern=6 4;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aplicar-ancla" value="Tras cualquiera de las dos confirmaciones,&#10;validar N, guardar el ancla y retirar el lote" style="rounded=1;arcSize=16;align=center;strokeColor=#6F9689;strokeWidth=1.4;fillColor=#F3F9F6;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#284F43;fontStyle=0;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="378" y="1007" width="324" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="errores" value="Si hay conflicto (HTTP 409) o la base está indisponible (HTTP 503), el iPhone conserva el lote y el ancla anterior." style="text;strokeColor=none;fillColor=none;html=0;whiteSpace=wrap;fontFamily=Helvetica;fontSize=16;fontColor=#465B6A;fontStyle=0;verticalAlign=middle;align=left;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1103" width="1360" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

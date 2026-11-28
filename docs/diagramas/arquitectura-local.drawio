@@ -1,0 +1,87 @@
+<mxfile host="app.diagrams.net" compressed="false">
+  <diagram id="arquitectura-local" name="Arquitectura local">
+    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="750" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="titulo" value="Arquitectura local de Compi" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontColor=#17344B;fontStyle=1;fontSize=31;" vertex="1" parent="1">
+          <mxGeometry x="40" y="28" width="1000" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitulo" value="El iPhone comparte las categorías de Salud autorizadas. El Mac conserva el historial y genera el plan semanal." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontColor=#17344B;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1190" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="iphone" value="iPhone" style="swimlane;horizontal=1;startSize=42;rounded=1;arcSize=4;collapsible=0;html=1;whiteSpace=wrap;align=left;spacingLeft=16;fontStyle=1;fontSize=17;strokeWidth=1.5;fontFamily=Helvetica;fontColor=#17344B;fillColor=#E6F3EC;swimlaneFillColor=#FFFFFF;strokeColor=#9CBCAA;" vertex="1" parent="1">
+          <mxGeometry x="240" y="130" width="1040" height="298" as="geometry" />
+        </mxCell>
+        <mxCell id="mac" value="Mac · instalación personal" style="swimlane;horizontal=1;startSize=42;rounded=1;arcSize=4;collapsible=0;html=1;whiteSpace=wrap;align=left;spacingLeft=16;fontStyle=1;fontSize=17;strokeWidth=1.5;fontFamily=Helvetica;fontColor=#17344B;fillColor=#E9F1F9;swimlaneFillColor=#FFFFFF;strokeColor=#A7BED0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="478" width="1240" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="reloj" value="&lt;b&gt;Huawei Watch&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Fit 4 Pro&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF8F2;strokeColor=#5D9076;" vertex="1" parent="1">
+          <mxGeometry x="40" y="219" width="155" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="huawei" value="&lt;b&gt;Huawei Health&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;App del reloj&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF8F2;strokeColor=#5D9076;" vertex="1" parent="iphone">
+          <mxGeometry x="35" y="89" width="175" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="salud" value="&lt;b&gt;Salud de Apple&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Muestras por fuente&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF8F2;strokeColor=#5D9076;" vertex="1" parent="iphone">
+          <mxGeometry x="342" y="89" width="190" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="otras" value="&lt;b&gt;iPhone y otras apps&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Otras fuentes de Salud&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF8F2;strokeColor=#5D9076;" vertex="1" parent="iphone">
+          <mxGeometry x="342" y="215" width="190" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="compi" value="&lt;b&gt;Compi&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;App iOS · SwiftUI&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF5FC;strokeColor=#577F9F;" vertex="1" parent="iphone">
+          <mxGeometry x="740" y="89" width="220" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="panel" value="&lt;b&gt;Panel web&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Next.js · localhost:3000&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF5FC;strokeColor=#577F9F;" vertex="1" parent="mac">
+          <mxGeometry x="30" y="86" width="185" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="&lt;b&gt;API personal&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;FastAPI · localhost:8000&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF5FC;strokeColor=#577F9F;" vertex="1" parent="mac">
+          <mxGeometry x="312" y="86" width="206" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Observaciones, cursores,&lt;br&gt;sesiones y planes&lt;/span&gt;" style="shape=cylinder3;boundedLbl=1;size=12;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#FFF5E2;strokeColor=#B28B47;" vertex="1" parent="mac">
+          <mxGeometry x="616" y="86" width="230" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="receptor" value="&lt;b&gt;Receptor móvil&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;FastAPI · HTTPS · 8443&lt;/span&gt;" style="rounded=1;arcSize=15;fontFamily=Helvetica;fontColor=#17344B;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=4;fontSize=16;strokeWidth=1.6;fillColor=#EFF5FC;strokeColor=#577F9F;" vertex="1" parent="mac">
+          <mxGeometry x="940" y="86" width="220" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="reloj-huawei" value="sincroniza" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="reloj" target="huawei">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-21" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="huawei-salud" value="categorías&lt;br&gt;compartidas" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="huawei" target="salud">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-23" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="otras-salud" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="otras" target="salud">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="salud-compi" value="lectura autorizada&lt;br&gt;con HealthKit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="salud" target="compi">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-23" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="compi-receptor" value="Wi-Fi · HTTPS con token&lt;br&gt;Validación física pendiente" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;dashPattern=6 5;" edge="1" parent="1" source="compi" target="receptor">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="90" y="-55" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="receptor-db" value="guarda cambios&lt;br&gt;y cursor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="receptor" target="db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-26" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="panel-api" value="consulta&lt;br&gt;y edita" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=block;startFill=1;" edge="1" parent="1" source="panel" target="api">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-26" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="api-db" value="lee y&lt;br&gt;escribe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.7;strokeColor=#426175;labelBackgroundColor=#FFFFFF;fontSize=12;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=#17344B;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=block;startFill=1;" edge="1" parent="1" source="api" target="db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-26" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
