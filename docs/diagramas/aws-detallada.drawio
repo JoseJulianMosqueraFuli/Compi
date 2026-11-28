@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" compressed="false">
+  <diagram id="compi-arquitectura-detallada" name="Arquitectura detallada">
+    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1940" pageHeight="1380" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Compi en AWS · Arquitectura detallada" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;spacing=0;fontFamily=Helvetica;fontSize=36;fontColor=#163248;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="23" width="1875" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Diseño propuesto para la plataforma multiusuario. El laboratorio del repositorio evalúa sesiones sintéticas en una tarea puntual." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;spacing=0;fontFamily=Helvetica;fontSize=20;fontColor=#4A6274;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="42" y="79" width="1850" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="product" value="Aplicación e identidad" style="rounded=1;arcSize=4;absoluteArcSize=1;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=20;spacingTop=10;container=1;collapsible=0;pointerEvents=0;fontFamily=Helvetica;fontColor=#22435F;fontStyle=1;fontSize=23;fillColor=#F4F8FC;strokeColor=#BBCEDE;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="36" y="130" width="1868" height="495" as="geometry" />
+        </mxCell>
+        <mxCell id="batch" value="Evaluación y promoción del recomendador" style="rounded=1;arcSize=4;absoluteArcSize=1;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=20;spacingTop=10;container=1;collapsible=0;pointerEvents=0;fontFamily=Helvetica;fontColor=#225649;fontStyle=1;fontSize=23;fillColor=#F2F8F4;strokeColor=#BDD5C7;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="36" y="665" width="1868" height="273" as="geometry" />
+        </mxCell>
+        <mxCell id="ops" value="Infraestructura y operación" style="rounded=1;arcSize=4;absoluteArcSize=1;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=20;spacingTop=10;container=1;collapsible=0;pointerEvents=0;fontFamily=Helvetica;fontColor=#48466B;fontStyle=1;fontSize=23;fillColor=#F7F7FB;strokeColor=#CAC9DB;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="36" y="980" width="1868" height="322" as="geometry" />
+        </mxCell>
+        <mxCell id="health" value="&lt;b&gt;Salud de Apple&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Huawei Health y otras apps&lt;br/&gt;escriben muestras en el iPhone.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=14;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="26" y="198" width="242" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="clients" value="&lt;b&gt;Clientes de Compi&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;iPhone · SwiftUI y HealthKit&lt;br/&gt;Navegador · panel web&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=14;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="380" y="198" width="290" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="auth" value="&lt;b&gt;Amazon Cognito&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;User pool · OAuth 2.0&lt;br/&gt;Código + PKCE&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="380" y="45" width="290" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="auth-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cognito;strokeColor=#FFFFFF;fillColor=#DD344C;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="auth" connectable="0">
+          <mxGeometry x="10" y="29" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="alb" value="&lt;b&gt;Application Load Balancer&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Listener HTTPS · 443&lt;br/&gt;Enrutamiento por ruta&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="820" y="198" width="250" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="alb-icon" value="" style="shape=mxgraph.aws4.application_load_balancer;strokeColor=none;fillColor=#8C4FFF;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="alb" connectable="0">
+          <mxGeometry x="10" y="29" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="web" value="&lt;b&gt;Next.js en Fargate&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Panel de actividad y edición&lt;br/&gt;de la semana de entrenamiento&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="1180" y="45" width="290" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="web-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.fargate;strokeColor=#FFFFFF;fillColor=#ED7100;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="web" connectable="0">
+          <mxGeometry x="10" y="29" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="&lt;b&gt;FastAPI en Fargate&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Valida firma y claims del JWT de acceso. Identifica al usuario por sub.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="1180" y="198" width="290" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="api-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.fargate;strokeColor=#FFFFFF;fillColor=#ED7100;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="api" connectable="0">
+          <mxGeometry x="10" y="29" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="rds" value="&lt;b&gt;Amazon RDS&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;PostgreSQL privado&lt;br/&gt;Datos aislados por usuario&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="product">
+          <mxGeometry x="1600" y="198" width="240" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-icon" value="" style="shape=mxgraph.aws4.rds_postgresql_instance;strokeColor=none;fillColor=#C925D1;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="rds" connectable="0">
+          <mxGeometry x="10" y="29" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="health-protocol" value="&lt;b&gt;Sincronización del iPhone&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#40596B&quot;&gt;POST /api/healthkit/batches. El teléfono conserva el lote hasta que el servidor confirma su secuencia.&lt;/span&gt;" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=17;fontColor=#264756;" vertex="1" parent="product" connectable="0">
+          <mxGeometry x="28" y="361" width="315" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="transaction" value="&lt;b&gt;Ingesta idempotente&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#40596B&quot;&gt;Cambios y cursor se guardan en una transacción. Si se repiten secuencia y huella se confirma N con applied=false, sin aplicar los cambios otra vez.&lt;/span&gt;" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=17;fontColor=#264756;" vertex="1" parent="product" connectable="0">
+          <mxGeometry x="382" y="361" width="335" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="workouts" value="&lt;b&gt;Entrenamientos y planes&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#40596B&quot;&gt;La persona vincula la actividad a una sesión o la crea. Las reglas combinan horario, preferencias e historial para generar la semana.&lt;/span&gt;" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=17;fontColor=#264756;" vertex="1" parent="product" connectable="0">
+          <mxGeometry x="822" y="361" width="322" height="107" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-content" value="&lt;b&gt;Datos operativos&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#40596B&quot;&gt;Observaciones, cursores por categoría, sesiones y series, disponibilidad y planes.&lt;/span&gt;" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=17;fontColor=#264756;" vertex="1" parent="product" connectable="0">
+          <mxGeometry x="1602" y="361" width="234" height="107" as="geometry" />
+        </mxCell>
+        <mxCell id="read" value="lectura en iOS&lt;br/&gt;con permiso" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#315B79;fontColor=#315B79;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="product" source="health" target="clients">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-23" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="identify" value="autenticación&lt;br/&gt;y tokens" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#315B79;fontColor=#315B79;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;startArrow=block;startFill=1;startSize=8;" edge="1" parent="product" source="clients" target="auth">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="68" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="requests" value="HTTPS · web o API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#315B79;fontColor=#315B79;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="product" source="clients" target="alb">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-17" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="routes-web" value="Ruta predeterminada&lt;br/&gt;/* · web" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#315B79;fontColor=#315B79;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="product" source="alb" target="web">
+          <mxGeometry relative="1" x="0.32" as="geometry">
+            <Array as="points">
+              <mxPoint x="945" y="101" />
+            </Array>
+            <mxPoint as="offset" x="0" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="routes-api" value="/api/*&lt;br/&gt;prioridad alta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#315B79;fontColor=#315B79;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="product" source="alb" target="api">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-23" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sql" value="SQL sobre TLS&lt;br/&gt;TCP 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#315B79;fontColor=#315B79;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=block;startFill=1;startSize=8;" edge="1" parent="product" source="api" target="rds">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-22" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sfn" value="&lt;b&gt;AWS Step Functions&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Inicio manual · Standard&lt;br/&gt;Espera a la tarea de ECS.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="batch">
+          <mxGeometry x="26" y="85" width="267" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="sfn-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.step_functions;strokeColor=#FFFFFF;fillColor=#E7157B;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="sfn" connectable="0">
+          <mxGeometry x="10" y="32" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="eval" value="&lt;b&gt;Evaluación en Fargate&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Compara mediana global y mediana por actividad para las mismas sesiones.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="batch">
+          <mxGeometry x="380" y="85" width="290" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="eval-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.fargate;strokeColor=#FFFFFF;fillColor=#ED7100;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="eval" connectable="0">
+          <mxGeometry x="10" y="32" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="&lt;b&gt;Amazon S3&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Dataset sintético versionado, informe y artefactos de cada corrida.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="batch">
+          <mxGeometry x="802" y="85" width="285" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="s3-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;strokeColor=#FFFFFF;fillColor=#7AA116;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="s3" connectable="0">
+          <mxGeometry x="10" y="32" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="accept" value="&lt;b&gt;Revisión humana&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Compara el candidato con la referencia y decide su promoción.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=14;fontSize=19;fontColor=#503D69;fillColor=#FFFFFF;strokeColor=#A68CBB;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="batch">
+          <mxGeometry x="1180" y="85" width="290" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="evidence" value="&lt;b&gt;Evidencia de revisión&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#40596B&quot;&gt;Versión del dataset y digest de imagen, sesiones evaluables, error absoluto medio y subestimaciones.&lt;/span&gt;" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacing=0;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=17;fontColor=#264756;" vertex="1" parent="batch" connectable="0">
+          <mxGeometry x="1601" y="92" width="242" height="133" as="geometry" />
+        </mxCell>
+        <mxCell id="run" value="ECS RunTask&lt;br/&gt;modo .sync" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#276A5E;fontColor=#276A5E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="batch" source="sfn" target="eval">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-23" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="artifacts" value="lee dataset y&lt;br/&gt;guarda resultados" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#276A5E;fontColor=#276A5E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=block;startFill=1;startSize=8;" edge="1" parent="batch" source="eval" target="s3">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-25" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="inspect" value="informe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#276A5E;fontColor=#276A5E;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="batch" source="s3" target="accept">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-18" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="promote" value="Fija la versión aprobada&lt;br/&gt;en el despliegue de la API.&lt;br/&gt;Reversión a la versión previa." style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#8055A3;fontColor=#8055A3;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;dashPattern=5 4;" edge="1" parent="1" source="accept" target="api">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="124" y="-25" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lineage" value="Cada recomendación conserva la versión de las reglas que la produjo." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;spacing=0;fontFamily=Helvetica;fontSize=16;fontColor=#38594D;fontStyle=0;" vertex="1" parent="batch">
+          <mxGeometry x="28" y="221" width="950" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="iac" value="&lt;b&gt;Terraform&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Aprovisiona red, identidad, servicios y almacenamiento tras revisar el plan.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#4D397A;fillColor=#FFFFFF;strokeColor=#ADA5C9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="ops">
+          <mxGeometry x="26" y="85" width="266" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="iac-icon" value="" style="shape=image;imageAspect=1;aspect=fixed;pointerEvents=0;image=data:image/svg+xml,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI5MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMjU2IDI5MSI+PHBhdGggZmlsbD0iIzQwNDBiMiIgZD0iTTE3Ni40ODUgMTg4Ljk5NEwyNTYgMTQzLjEyN1Y1MS4yNDlsLTc5LjUxNSA0NS45NjN6Ii8+PHBhdGggZmlsbD0iIzVjNGVlNSIgZD0ibTg4LjI0MyA1MS4yNDlsNzkuNTE1IDQ1Ljk2M3Y5MS43ODJMODguMjQzIDE0My4wOE0wIDkxLjgzbDc5LjUxNSA0NS45MTZ2LTkxLjgzTDAgMG04OC4yNDMgMjQ0Ljk5NGw3OS41MTUgNDUuOTE1di05MS44M2wtNzkuNTE1LTQ1LjkxNSIvPjwvc3ZnPg==;" vertex="1" parent="iac" connectable="0">
+          <mxGeometry x="13" y="33" width="48" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr" value="&lt;b&gt;Amazon ECR&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Almacena las imágenes de web, API y evaluación que publica el proceso de build.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="ops">
+          <mxGeometry x="380" y="85" width="290" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;strokeColor=#FFFFFF;fillColor=#ED7100;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="ecr" connectable="0">
+          <mxGeometry x="10" y="34" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="ecs" value="&lt;b&gt;Amazon ECS&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Las definiciones de tarea fijan las imágenes por digest para cada servicio y el evaluador.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="ops">
+          <mxGeometry x="802" y="85" width="285" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="ecs-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecs;strokeColor=#FFFFFF;fillColor=#ED7100;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="ecs" connectable="0">
+          <mxGeometry x="10" y="34" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="watch" value="&lt;b&gt;Amazon CloudWatch&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Logs técnicos y métricas de latencia, errores y corridas.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="ops">
+          <mxGeometry x="1180" y="85" width="290" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="watch-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;strokeColor=#FFFFFF;fillColor=#E7157B;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="watch" connectable="0">
+          <mxGeometry x="10" y="34" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="iam" value="&lt;b&gt;AWS IAM&lt;/b&gt;&lt;br/&gt;&lt;span style=&quot;font-size:15px;color:#374E5E&quot;&gt;Rol de ejecución para ECR y logs. Rol de tarea para el acceso del evaluador a S3.&lt;/span&gt;" style="rounded=1;absoluteArcSize=1;arcSize=10;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;collapsible=0;spacing=0;spacingRight=9;spacingLeft=76;fontSize=19;fontColor=#182F41;fillColor=#FFFFFF;strokeColor=#ACBEC9;strokeWidth=1.5;fontFamily=Helvetica;" vertex="1" parent="ops">
+          <mxGeometry x="1580" y="85" width="260" height="122" as="geometry" />
+        </mxCell>
+        <mxCell id="iam-icon" value="" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.identity_and_access_management;strokeColor=#FFFFFF;fillColor=#DD344C;gradientColor=none;aspect=fixed;outlineConnect=0;pointerEvents=0;" vertex="1" parent="iam" connectable="0">
+          <mxGeometry x="10" y="34" width="54" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="pull" value="imagen por digest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#626782;fontColor=#626782;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="ops" source="ecr" target="ecs">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-18" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="observe" value="telemetría" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#626782;fontColor=#626782;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="ops" source="ecs" target="watch">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <mxPoint as="offset" x="0" y="-18" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="provision" value="aprovisiona clúster y definiciones de tarea" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#626782;fontColor=#626782;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.34;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="ops" source="iac" target="ecs">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="159" y="250" />
+              <mxPoint x="899" y="250" />
+            </Array>
+            <mxPoint as="offset" x="0" y="-14" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="authorize" value="permisos de ejecución y de aplicación" style="edgeStyle=orthogonalEdgeStyle;rounded=1;arcSize=5;jettySize=auto;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;endSize=8;labelBackgroundColor=#FFFFFF;strokeWidth=1.8;fontSize=14;fontFamily=Helvetica;strokeColor=#626782;fontColor=#626782;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.68;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="ops" source="iam" target="ecs">
+          <mxGeometry relative="1" x="0" as="geometry">
+            <Array as="points">
+              <mxPoint x="1710" y="264" />
+              <mxPoint x="996" y="264" />
+            </Array>
+            <mxPoint as="offset" x="0" y="-14" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
